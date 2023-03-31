@@ -141,14 +141,12 @@ def main(args):
         
     ### Predict the PMV and PPD values
     pmv, ppd = predict_pmv_ppd(df, args)
-    
-    for i, j in zip(pmv, ppd):
-        print(f"PMV: {i} | PPD: {j}") 
-        
     print(f"Average PMV: {np.mean(pmv)} | Average PPD: {np.mean(ppd)}")
-    print(f"PMV.shape: {pmv.shape} | PPD.shape: {ppd.shape}")
-    print(f"Dataset lenth: {len(df)}")  
-    
+
+    ### Save the results
+    df['pmv'] = pmv
+    df['ppd'] = ppd
+    df.to_csv("data_w_confort.csv", index=False)
 
     return
 
