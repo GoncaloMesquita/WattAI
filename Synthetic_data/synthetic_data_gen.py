@@ -24,7 +24,7 @@ def generate_data(original_data, noise, n_samples):
         noise_sample = noise.sample(1, ignore_index=True)
         new_data.iloc[i, [0,1,2,3,4,5,8,9,10]] = original_data.iloc[math.floor(i/n_samples), [0,1,2,3,4,5,8,9,10]] + noise_sample.iloc[:, [0,1,2,3,4,5,8,9,10]]
         new_data.iloc[i, [6,7,11]] = original_data.iloc[math.floor(i/n_samples), [6,7,11]] * (1+noise_sample.iloc[:, [6,7,11]])
-        if i%100 == 0:
+        if i%200 == 0:
             print(i)
     # lembrar de verificar se não há percentagens acima de 100 nem energias negativas and airflow negativo
     return new_data
@@ -36,13 +36,24 @@ data = pd.read_csv('dataset_building.csv')
 # synthetic_data = generate_data(data, noise, 2)
 # synthetic_data.to_csv('Synthetic_data/synthetic_data.csv', index=False)
 
+
+clean_synthetic_data = pd.read_csv('Synthetic_data/clean_synthetic_data.csv')
 synthetic_data = pd.read_csv('Synthetic_data/synthetic_data.csv')
-print(data.max())
-print(synthetic_data.max())
-print(data.min())
-print(synthetic_data.min())
 
 # plot_histograms(data)
 # plot_histograms(synthetic_data)
+# plot_histograms(clean_synthetic_data)
 # plt.show()
 
+# df1 = pd.read_csv('Synthetic_data/synthetic_data.csv')
+# df1 = df1.drop(df1[df1['supplyfan_speed'] > 100].index)
+# df1 = df1.drop(df1[df1['returnfan_speed'] > 100].index)
+# df1 = df1.drop(df1[df1['energy_hvac']  < 0].index)
+# df1 = df1.drop(df1[df1['zone_temp_heating'] > 31].index)
+# df1 = df1.drop(df1[df1['Outdoor_temp'] > 45].index)
+# df1 = df1.drop(df1[df1['outdoor_air_damper_position'] > 100].index)
+# df1 = df1.drop(df1[df1['filtered_air_flow_rate'] < 0].index)
+# df1 = df1.drop(df1[df1['outdoor_air_damper_position'] < 0].index)
+# print(df1.shape)
+# print(df1.max())
+# print(df1.min())

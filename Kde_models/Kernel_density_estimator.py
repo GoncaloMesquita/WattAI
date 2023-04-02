@@ -37,9 +37,11 @@ def kernel_estimator(df, col=True):
 directory = 'Kde_models'
 file_name_template = 'kde_{}.pkl'
 df = pd.read_csv('noise_model/data_noise.csv')
-df_samples = pd.DataFrame(columns=df.columns, index=range(35827))
-kernel_estimator(df, col=False)
-num_samples = 35827
+df_samples = pd.DataFrame(columns=df.columns, index=range(35450))
+# kernel_estimator(df, True)
+# kernel_estimator(df, col=False)
+num_samples = 35450
+# flag = True
 flag = False
 if flag:
     for column in df.columns:

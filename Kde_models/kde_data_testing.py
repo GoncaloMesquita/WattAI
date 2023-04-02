@@ -20,8 +20,8 @@ from data_visualization import plot_histograms
 # read the data
 data = pd.read_csv('Noise_model/data_noise.csv')
 
-noise_samples = pd.read_csv('Kde_models/kde_noise_independent_sampling.csv')
-# noise_samples = pd.read_csv('Kde_models/kde_noise_dependent_sampling.csv')
+# noise_samples = pd.read_csv('Kde_models/kde_noise_independent_sampling.csv')
+noise_samples = pd.read_csv('Kde_models/kde_noise_dependent_sampling.csv')
 
 plot_histograms(noise_samples)
 

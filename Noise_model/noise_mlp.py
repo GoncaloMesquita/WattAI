@@ -18,8 +18,9 @@ from tensorflow.keras.layers import Dense, Dropout
 import pickle
 
 # read the data
-data = pd.read_csv('dataset_building.csv')
-# data = pd.read_csv('noise_model/data_noise.csv')
+# data = pd.read_csv('dataset_building.csv')
+data = pd.read_csv('Noise_model/data_noise.csv')
+
 
 # data = data.diff(periods=49).dropna()
 
@@ -27,11 +28,11 @@ X = data.iloc[:, range(1,12)]
 y = data.iloc[:, 0]
 # Split the dataset into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-df = pd.concat([y_train, X_train], axis=1)
-df.to_csv('Training_data.csv', index=False)
+# df = pd.concat([y_train, X_train], axis=1)
+# df.to_csv('Training_data.csv', index=False)
 
-df = pd.concat([y_test, X_test], axis=1)
-df.to_csv('Hold_out_data.csv', index=False)
+# df = pd.concat([y_test, X_test], axis=1)
+# df.to_csv('Hold_out_data.csv', index=False)
 # Scale the features
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
@@ -55,7 +56,7 @@ model.compile(optimizer='adam', loss='mean_squared_error')
 
 # Train the model
 my_callbacks = [keras.callbacks.EarlyStopping(monitor = 'val_loss', patience=10, restore_best_weights=True)]
-history = model.fit(X_train, y_train, epochs=200, batch_size=32, validation_split=0.2, callbacks= my_callbacks)
+history = model.fit(X_train, y_train, epochs=5, batch_size=32, validation_split=0.2, callbacks= my_callbacks)
 
 # Evaluate the model on the test set
 y_pred = model.predict(X_test)
