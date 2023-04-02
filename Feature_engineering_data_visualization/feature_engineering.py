@@ -291,3 +291,7 @@ df_imp = df_imp.drop_duplicates(subset='date')
 
 
 df_imp.to_csv("dataset_building.csv", index=False)  
+
+############################## Clean 
+
+print(df_imp.min())
