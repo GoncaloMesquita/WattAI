@@ -121,7 +121,7 @@ y_ns.drop(['co2'], inplace=True, axis=1)
 x_action = df.loc[:,['zone_temp_cooling', 'zone_temp_heating', 'supplyfan_speed', 'returnfan_speed', 'outdoor_air_damper_position', 'Outdoor_temp']]
 x_action_state = pd.concat([x_action, x_ns], axis=1)
 
-x_action_state.to_csv('data_set_environment')
+x_action_state.to_csv('Environment/data_set_environment.csv')
 
 x_train, x_test, Y_train, Y_test = train_test_split(x_action_state , y_ns , test_size=0.15, random_state=42)
 
