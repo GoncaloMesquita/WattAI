@@ -106,15 +106,15 @@ def run_model(x_norm_train,y_train, x_norm_test, y_test ):
 train_data = pd.read_csv('Synthetic_data/clean_synthetic_data.csv')
 validation_data = pd.read_csv('Training_data.csv')
 df = pd.concat([train_data, validation_data], axis=0, ignore_index=True)
-# x, y = df_small.drop(['indoor_temp_interior'], inplace=False, axis=1) , df_small.loc[:,['indoor_temp_interior', 'co2']]
 
-y_ns= pd.DataFrame(df.loc[:,['indoor_temp_interior', 'co2','supply_air_temp', 'return_air_temp', 'filtered_air_flow_rate']], columns=['ns_indoor_temp_interior', 'ns_co2','ns_supply_air_temp', 'ns_return_air_temp', 'filtered_air_flow_rate'])
-y_ns = df.loc[:,['indoor_temp_interior', 'co2','supply_air_temp', 'return_air_temp', 'filtered_air_flow_rate']]
+
+y_ns= pd.DataFrame(df.loc[:,['indoor_temp_interior', 'co2','supply_air_temp', 'return_air_temp', 'filtered_air_flow_rate']].values, columns=['ns_indoor_temp_interior', 'ns_co2','ns_supply_air_temp', 'ns_return_air_temp', 'ns_filtered_air_flow_rate'])
+
 df = df.iloc[:-1]
 x_ns = y_ns.iloc[1:]
 x_ns = x_ns.reset_index(drop=True)
 y_ns = y_ns.iloc[:-1]
-
+print(x_ns)
 # y_ns.drop(['co2'], inplace=True, axis=1)
 # print(y_ns)
 
@@ -122,18 +122,17 @@ x_action = df.loc[:,['zone_temp_cooling', 'zone_temp_heating', 'supplyfan_speed'
 x_action_state = pd.concat([x_action, x_ns], axis=1)   
 
 
+df_ns = pd.concat([df, x_ns ], axis=1, ignore_index=False)
+print(df_ns.columns)
 
-df_ns= pd.concat([df, x_ns ], axis=1, ignore_index=True)
-
-
-df_ns.to_csv('Environment/data_set_environment.csv')
+df_ns.to_csv('Environment/data_set_environment.csv', index=False)
 
 x_train, x_test, Y_train, Y_test = train_test_split(x_action_state , y_ns , test_size=0.15, random_state=42)
 
 X_norm_test, X_norm_train = normalize_data(x_train, x_test)
 
-y_ns_pred = run_model(X_norm_train,Y_train, X_norm_test, Y_test)
+# y_ns_pred = run_model(X_norm_train,Y_train, X_norm_test, Y_test)
 
-print(y_ns_pred.numpy(), Y_test.to_numpy())
+# print(y_ns_pred.numpy(), Y_test.to_numpy())
 
 
