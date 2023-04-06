@@ -10,8 +10,9 @@ import itertools
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torchmetrics.functional import r2_score
 # from torcheval.metrics import R2Score
-from sklearn.metrics import r2_score
+# from sklearn.metrics import r2_score
 
 
 def normalize_data(xtrain, xtest):
@@ -64,14 +65,14 @@ class MLP(nn.Module):
 
 ############################################ MLP ############################################################
 
-def run_model(x_norm_train,y_train, x_norm_test, y_test ):
+def run_model(x_norm_train,y_train, x_norm_test, y_test, size_output ):
     input_size =11
-    hidden_size1 = 16
-    hidden_size2 = 8
+    hidden_size1 = 80
+    hidden_size2 = 80
     hidden_size3 = 10
     dropout_prob = 0
-    output_size = 1
-    learning_rate = 0.1
+    output_size = size_output
+    learning_rate = 0.15
     num_epochs = 500
 
     model = MLP( input_size, hidden_size1,hidden_size2,hidden_size3,dropout_prob, output_size)
@@ -87,15 +88,15 @@ def run_model(x_norm_train,y_train, x_norm_test, y_test ):
         loss.backward()                                                         # Do the backpropagation 
         optimizer.step()                                                        # Update the weights 
         if (epoch+1) % 10 == 0:
-            print('Epoch [{}/{}], Loss: {:.4f}, R2: {:.4f}'.format(epoch+1, num_epochs, loss.item(), r2_score1(torch.tensor(y_train.values).float() ,outputs)))
+            print('Epoch [{}/{}], Loss: {:.4f}, R2: {:.4f}'.format(epoch+1, num_epochs, loss.item(), r2_score(outputs,torch.tensor(y_train.values).float())))
 
     with torch.no_grad():
 
         model.eval()
         y_pred = model(torch.tensor(x_norm_test).float()) 
-        print(' Testing -> Loss: {:.4f}, R2: {:.4f}'.format( criterion(y_pred, torch.tensor(y_test.values).float()).item() , r2_score1(torch.tensor(y_test.values).float() ,y_pred)))
+        print(' Testing -> Loss: {:.4f}, R2: {:.4f}'.format( criterion(y_pred, torch.tensor(y_test.values).float()).item() ,r2_score( y_pred,torch.tensor(y_test.values).float())))
     
-    return y_pred
+    return y_pred, model
 
 
 
@@ -111,8 +112,11 @@ x_ns = x_ns.reset_index(drop=True)
 y_ns = y_ns.iloc[:-1]
 
 
-y_ns.drop([ 'ns_co2','ns_supply_air_temp', 'ns_return_air_temp', 'ns_filtered_air_flow_rate'], inplace=True, axis=1)
+# y_next_sate = y_ns.drop([ 'ns_supply_air_temp', 'ns_return_air_temp', 'ns_filtered_air_flow_rate'], axis=1)
+# y_operational_data = y_ns.drop([ 'ns_indoor_temp_interior', 'ns_co2'], axis=1)
 #print(y_ns)
+y_ns.drop(['ns_indoor_temp_interior', 'ns_co2'],inplace=True, axis=1)
+
 
 x_action = df.loc[:,['zone_temp_cooling', 'zone_temp_heating', 'supplyfan_speed', 'returnfan_speed', 'outdoor_air_damper_position', 'Outdoor_temp']]
 x_action_state = pd.concat([x_action, x_ns], axis=1)   
@@ -121,7 +125,7 @@ x_action_state = pd.concat([x_action, x_ns], axis=1)
 df_ns = pd.concat([df, x_ns ], axis=1, ignore_index=False)
 df_ns.to_csv('Environment/data_set_environment.csv', index=False)
 
-x_train, x_test, Y_train, Y_test = train_test_split(x_action_state , y_ns , test_size=0.15, random_state=42)
+x_train, x_test, Y_train, Y_test = train_test_split(x_action_state , df.loc[:,['indoor_temp_interior', 'co2']], test_size=0.15, random_state=42)
 
 Training = pd.concat([x_train, Y_train ], axis=1, ignore_index=False)
 Training.to_csv('Environment/training_environment.csv', index=False)
@@ -131,6 +135,12 @@ Testing.to_csv('Environment/testing_environment.csv', index=False)
 
 X_norm_test, X_norm_train = normalize_data(x_train, x_test)
 
-y_ns_pred = run_model(X_norm_train,Y_train, X_norm_test, Y_test)
+y_ns_pred, model_next_state = run_model(X_norm_train,Y_train, X_norm_test, Y_test, 2)
+
+
+
+
+
+
 
 
