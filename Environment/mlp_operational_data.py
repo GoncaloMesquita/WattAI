@@ -37,22 +37,22 @@ class MLP(nn.Module):
         self.fc1 = nn.Linear(input_size, hidden_size1)
         self.relu = nn.ReLU()
         self.dropout1 = nn.Dropout(dropout_prob)
-        # self.fc2 = nn.Linear(hidden_size1, hidden_size2)
-        # self.relu = nn.ReLU()
-        # self.dropout2 = nn.Dropout(dropout_prob)
+        self.fc2 = nn.Linear(hidden_size1, hidden_size2)
+        self.relu = nn.ReLU()
+        self.dropout2 = nn.Dropout(dropout_prob)
         # self.fc3 = nn.Linear(hidden_size2, hidden_size3)
         # self.relu = nn.ReLU()
         # self.dropout3 = nn.Dropout(dropout_prob)
         # self.fc4 = nn.Linear(hidden_size3, output_size)
-        self.fc4 = nn.Linear(hidden_size1, output_size)
+        self.fc4 = nn.Linear(hidden_size2, output_size)
 
     def forward(self, x):
         x = self.fc1(x)
         x = self.relu(x)    
         x = self.dropout1(x)
-        # x = self.fc2(x)
-        # x = self.relu(x)
-        # x = self.dropout2(x)
+        x = self.fc2(x)
+        x = self.relu(x)
+        x = self.dropout2(x)
         # x = self.fc3(x)
         # x = self.relu(x)
         # x = self.dropout3(x)
@@ -65,13 +65,13 @@ class MLP(nn.Module):
 ############################################ MLP ############################################################
 
 def run_model(x_norm_train,y_train, x_norm_test, y_test ):
-    input_size = 8
+    input_size =11
     hidden_size1 = 60
     hidden_size2 = 40
     hidden_size3 = 10
     dropout_prob = 0
     output_size = 1
-    learning_rate = 0.1
+    learning_rate = 0.15
     num_epochs = 500
 
     model = MLP( input_size, hidden_size1,hidden_size2,hidden_size3,dropout_prob, output_size)
@@ -108,20 +108,25 @@ validation_data = pd.read_csv('Training_data.csv')
 df = pd.concat([train_data, validation_data], axis=0, ignore_index=True)
 # x, y = df_small.drop(['indoor_temp_interior'], inplace=False, axis=1) , df_small.loc[:,['indoor_temp_interior', 'co2']]
 
-
-y_ns = df.loc[:,['indoor_temp_interior', 'co2']]
+y_ns= pd.DataFrame(df.loc[:,['indoor_temp_interior', 'co2','supply_air_temp', 'return_air_temp', 'filtered_air_flow_rate']], columns=['ns_indoor_temp_interior', 'ns_co2','ns_supply_air_temp', 'ns_return_air_temp', 'filtered_air_flow_rate'])
+y_ns = df.loc[:,['indoor_temp_interior', 'co2','supply_air_temp', 'return_air_temp', 'filtered_air_flow_rate']]
 df = df.iloc[:-1]
 x_ns = y_ns.iloc[1:]
 x_ns = x_ns.reset_index(drop=True)
 y_ns = y_ns.iloc[:-1]
 
-y_ns.drop(['co2'], inplace=True, axis=1)
-
+# y_ns.drop(['co2'], inplace=True, axis=1)
+# print(y_ns)
 
 x_action = df.loc[:,['zone_temp_cooling', 'zone_temp_heating', 'supplyfan_speed', 'returnfan_speed', 'outdoor_air_damper_position', 'Outdoor_temp']]
-x_action_state = pd.concat([x_action, x_ns], axis=1)
+x_action_state = pd.concat([x_action, x_ns], axis=1)   
 
-x_action_state.to_csv('Environment/data_set_environment.csv')
+
+
+df_ns= pd.concat([df, x_ns ], axis=1, ignore_index=True)
+
+
+df_ns.to_csv('Environment/data_set_environment.csv')
 
 x_train, x_test, Y_train, Y_test = train_test_split(x_action_state , y_ns , test_size=0.15, random_state=42)
 
