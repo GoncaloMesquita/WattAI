@@ -66,7 +66,7 @@ class MLP(nn.Module):
 
 def run_model(x_norm_train,y_train, x_norm_test, y_test ):
     input_size =11
-    hidden_size1 = 60
+    hidden_size1 = 80
     hidden_size2 = 10
     hidden_size3 = 10
     dropout_prob = 0
@@ -103,13 +103,13 @@ def run_model(x_norm_train,y_train, x_norm_test, y_test ):
 
 ##################################################### Main #####################################################
 
-train_data = pd.read_csv('Synthetic_data/clean_synthetic_data.csv')
-# validation_data = pd.read_csv('Training_data.csv')
+# train_data = pd.read_csv('Synthetic_data/clean_synthetic_data.csv')
+validation_data = pd.read_csv('Training_data.csv')
 # df = pd.concat([train_data, validation_data], axis=0, ignore_index=True)
 
-y_ns= pd.DataFrame(train_data.loc[:,['indoor_temp_interior', 'co2','supply_air_temp', 'return_air_temp', 'filtered_air_flow_rate']].values, columns=['ns_indoor_temp_interior', 'ns_co2','ns_supply_air_temp', 'ns_return_air_temp', 'ns_filtered_air_flow_rate'])
+y_ns= pd.DataFrame(validation_data.loc[:,['indoor_temp_interior', 'co2','supply_air_temp', 'return_air_temp', 'filtered_air_flow_rate']].values, columns=['ns_indoor_temp_interior', 'ns_co2','ns_supply_air_temp', 'ns_return_air_temp', 'ns_filtered_air_flow_rate'])
 
-df = train_data.iloc[:-1]
+df = validation_data.iloc[:-1]
 x_ns = y_ns.iloc[1:]
 x_ns = x_ns.reset_index(drop=True)
 y_ns = y_ns.iloc[:-1]
