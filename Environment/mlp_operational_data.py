@@ -33,7 +33,7 @@ def r2_score1(y_true, y_pred1):
 
 class MLP(nn.Module):
 
-    def __init__(self, input_size, hidden_size1,hidden_size2 ,hidden_size3,dropout_prob, output_size):
+    def __init__(self, input_size, hidden_size1,hidden_size2 ,dropout_prob, output_size):
         super(MLP, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size1)
         self.relu = nn.ReLU()
@@ -41,10 +41,6 @@ class MLP(nn.Module):
         self.fc2 = nn.Linear(hidden_size1, hidden_size2)
         self.relu = nn.ReLU()
         self.dropout2 = nn.Dropout(dropout_prob)
-        # self.fc3 = nn.Linear(hidden_size2, hidden_size3)
-        # self.relu = nn.ReLU()
-        # self.dropout3 = nn.Dropout(dropout_prob)
-        # self.fc4 = nn.Linear(hidden_size3, output_size)
         self.fc4 = nn.Linear(hidden_size2 , output_size)
 
     def forward(self, x):
@@ -54,9 +50,6 @@ class MLP(nn.Module):
         x = self.fc2(x)
         x = self.relu(x)
         x = self.dropout2(x)
-        # x = self.fc3(x)
-        # x = self.relu(x)
-        # x = self.dropout3(x)
         x = self.fc4(x)
 
         return x
@@ -65,17 +58,86 @@ class MLP(nn.Module):
 
 ############################################ MLP ############################################################
 
-def run_model(x_norm_train,y_train, x_norm_test, y_test, size_output ):
+def run_model_enviorment(x_norm_train,y_train, x_norm_test, y_test, size_output ):
     input_size =11
-    hidden_size1 = 80
-    hidden_size2 = 80
-    hidden_size3 = 10
+    hidden_size1 = 26
+    hidden_size2 = 26
+    
     dropout_prob = 0
     output_size = size_output
     learning_rate = 0.15
     num_epochs = 500
 
-    model = MLP( input_size, hidden_size1,hidden_size2,hidden_size3,dropout_prob, output_size)
+    model = MLP( input_size, hidden_size1,hidden_size2, dropout_prob, output_size)
+    # model = MLP( input_size, hidden_size1,dropout_prob, output_size)
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
+    for epoch in range (num_epochs):
+
+        optimizer.zero_grad()                                                   # Set the gradients to None
+        outputs = model(torch.tensor(x_norm_train).float())                     # Train the model
+        loss = criterion(outputs, torch.tensor(y_train.values).float())         # Calculate the loss 
+        loss.backward()                                                         # Do the backpropagation 
+        optimizer.step()                                                        # Update the weights 
+        if (epoch+1) % 10 == 0:
+            mean_r2score_train = (r2_score(outputs[:,0],torch.tensor(y_train.iloc[:,0].values).float()) + r2_score(outputs[:,1],torch.tensor(y_train.iloc[:,1].values).float()) )/ y_train.shape[1]
+            print('Epoch [{}/{}], Loss: {:.4f}, R2: {:.4f}'.format(epoch+1, num_epochs, loss.item(), mean_r2score_train))
+
+    with torch.no_grad():
+
+        model.eval()
+        y_pred = model(torch.tensor(x_norm_test).float()) 
+        mean_r2score_test = (r2_score(y_pred[:,0],torch.tensor(y_test.iloc[:,0].values).float()) + r2_score(y_pred[:,1],torch.tensor(y_test.iloc[:,1].values).float()) )/ y_test.shape[1]
+        print(' Testing -> Loss: {:.4f}, R2: {:.4f}'.format( criterion(y_pred, torch.tensor(y_test.values).float()).item() ,mean_r2score_test))
+    
+    return y_pred, model
+
+def run_model_air_temp(x_norm_train,y_train, x_norm_test, y_test, size_output ):
+    input_size =11
+    hidden_size1 = 16
+    hidden_size2 = 16
+    dropout_prob = 0
+    output_size = size_output
+    learning_rate = 0.15
+    num_epochs = 500
+
+    model = MLP( input_size, hidden_size1,hidden_size2,dropout_prob, output_size)
+    # model = MLP( input_size, hidden_size1,dropout_prob, output_size)
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
+    for epoch in range (num_epochs):
+
+        optimizer.zero_grad()                                                   # Set the gradients to None
+        outputs = model(torch.tensor(x_norm_train).float())                     # Train the model
+        loss = criterion(outputs, torch.tensor(y_train.values).float())         # Calculate the loss 
+        loss.backward()                                                         # Do the backpropagation 
+        optimizer.step()                                                        # Update the weights 
+        if (epoch+1) % 10 == 0:
+            mean_r2score_train = (r2_score(outputs[:,0],torch.tensor(y_train.iloc[:,0].values).float()) + r2_score(outputs[:,1],torch.tensor(y_train.iloc[:,1].values).float()) )/ y_train.shape[1]
+            print('Epoch [{}/{}], Loss: {:.4f}, R2: {:.4f}'.format(epoch+1, num_epochs, loss.item(), mean_r2score_train))
+
+    with torch.no_grad():
+
+        model.eval()
+        y_pred = model(torch.tensor(x_norm_test).float())
+        mean_r2score_test = (r2_score(y_pred[:,0],torch.tensor(y_test.iloc[:,0].values).float()) + r2_score(y_pred[:,1],torch.tensor(y_test.iloc[:,1].values).float()) )/ y_test.shape[1]
+        print(' Testing -> Loss: {:.4f}, R2: {:.4f}'.format( criterion(y_pred, torch.tensor(y_test.values).float()).item() ,mean_r2score_test))
+    
+    return y_pred, model
+
+def run_model_air_flowrate(x_norm_train,y_train, x_norm_test, y_test, size_output ):
+
+    input_size = 11
+    hidden_size1 = 30
+    hidden_size2 = 30
+    dropout_prob = 0
+    output_size = size_output
+    learning_rate = 0.15
+    num_epochs = 500
+
+    model = MLP( input_size, hidden_size1,hidden_size2,dropout_prob, output_size)
     # model = MLP( input_size, hidden_size1,dropout_prob, output_size)
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
@@ -100,6 +162,8 @@ def run_model(x_norm_train,y_train, x_norm_test, y_test, size_output ):
 
 
 
+
+
 ##################################################### Main #####################################################
 
 df = pd.read_csv('dataset_building.csv')
@@ -115,7 +179,7 @@ y_ns = y_ns.iloc[:-1]
 # y_next_sate = y_ns.drop([ 'ns_supply_air_temp', 'ns_return_air_temp', 'ns_filtered_air_flow_rate'], axis=1)
 # y_operational_data = y_ns.drop([ 'ns_indoor_temp_interior', 'ns_co2'], axis=1)
 #print(y_ns)
-y_ns.drop(['ns_indoor_temp_interior', 'ns_co2'],inplace=True, axis=1)
+# y_ns.drop(['ns_indoor_temp_interior', 'ns_co2'],inplace=True, axis=1)
 
 
 x_action = df.loc[:,['zone_temp_cooling', 'zone_temp_heating', 'supplyfan_speed', 'returnfan_speed', 'outdoor_air_damper_position', 'Outdoor_temp']]
@@ -135,12 +199,30 @@ Testing.to_csv('Environment/testing_environment.csv', index=False)
 
 X_norm_test, X_norm_train = normalize_data(x_train, x_test)
 
-y_ns_pred, model_next_state = run_model(X_norm_train,Y_train, X_norm_test, Y_test, 2)
+#######################################  Enviorment MODEL   ######################################
+
+y_ns_pred, model_next_state = run_model_enviorment(X_norm_train,Y_train, X_norm_test, Y_test, 2)
 
 
+#######################################  Air Temp MODEL   #############################################
+
+x_train_at, x_test_at, Y_train_at, Y_test_at = train_test_split(x_action_state , df.loc[:,['supply_air_temp', 'return_air_temp' ]], test_size=0.15, random_state=42)
+
+X_norm_test_at, X_norm_train_at = normalize_data(x_train_at, x_test_at)
+
+y_operational_data_pred, model_air_temp_suplly_return  = run_model_air_temp(X_norm_train_at , Y_train_at, X_norm_test_at, Y_test_at, 2)
+
+#######################################  Air Flow rate model #########################################
+
+x_train_fr, x_test_fr, Y_train_fr, Y_test_fr = train_test_split(x_action_state , df.loc[:,['filtered_air_flow_rate']], test_size=0.15, random_state=42)
+
+X_norm_test_fr, X_norm_train_fr = normalize_data(x_train_fr, x_test_fr)
+
+y_operational_data_pred, model_air_flowrate  = run_model_air_flowrate(X_norm_train_fr , Y_train_fr, X_norm_test_fr, Y_test_fr, 1)
 
 
+# Save the models 
 
-
-
-
+torch.save(model_next_state, 'Environment/model_next_state.h5')
+torch.save(model_air_temp_suplly_return, 'Environment/model_air_temp_suplly_return.h5')
+torch.save(model_air_flowrate, 'Environment/model_air_flowrate.h5')
