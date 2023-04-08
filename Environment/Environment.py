@@ -12,7 +12,8 @@ def Environment(action, state, models_dict, scalers_dict):
     """
 
     # Environment evolution
-    df_state = np.concatenate((action, state ), axis=1)  
+    df_state = np.concatenate((action, state ), axis=1)
+    df_state = scalers_dict['scaler_environment'].transform(df_state)
     # fazer prediction of next state com MLPs
 
     indoor_temp_co2 = models_dict['model_next_state'](torch.tensor(df_state).float())
