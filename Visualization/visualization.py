@@ -57,38 +57,53 @@
 # pygame.quit()
 
 
-import numpy as np
-import mlagents
-from mlagents_envs.environment import UnityEnvironment
+import pygame
 
-# Start the Unity environment
-env = UnityEnvironment(file_name="HouseEnvironment")
+pygame.init()
 
-# Set up the brain for the environment
-behavior_name = list(env.behavior_specs)[0]
-spec = env.behavior_specs[behavior_name]
-agent_id = spec.create_agent()
-obs_size = spec.observation_shapes[0][0]
-action_size = spec.action_shape
+# Set up the window
+size = (1200, 1200)
+screen = pygame.display.set_mode(size)
+pygame.display.set_caption("Simulation")
 
-# Reset the environment and get the initial state
-env.reset()
-decision_steps, _ = env.get_steps(behavior_name)
-state = decision_steps.obs[0]
+# Load the background image
+background = pygame.image.load("Visualization/plant.png")
+background = pygame.transform.scale(background, (size))
 
-# Run the simulation for a few steps
-for i in range(100):
-    # Choose a random action
-    action = np.random.uniform(-1.0, 1.0, size=action_size)
+# Load the fan image
+fan_image = pygame.image.load('Visualization/fan.png')
+fan_image = pygame.transform.scale(fan_image, (100,100))
 
-    # Take a step in the environment
-    env.set_actions(behavior_name, np.array([action]))
-    env.step()
-    decision_steps, _ = env.get_steps(behavior_name)
+# Set up the fan position and speed
+fan_pos = [100, 300]
+fan_speed = 5
 
-    # Get the new state and reward
-    state = decision_steps.obs[0]
-    reward = decision_steps.reward[0]
+# Set up the clock
+clock = pygame.time.Clock()
 
-    # Print the state and reward
-    print(state, reward)
+# Main loop
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            quit()
+
+    # Update the fan speed based on the simulation time
+    fan_speed = pygame.time.get_ticks() / 1000.0
+
+    # Clear the screen
+    # screen.fill((255, 255, 255))
+
+    screen.blit(background, (100, 200))
+
+    # Draw the fan
+    
+    fan_rotated = pygame.transform.rotate(fan_image, fan_speed * 10)
+    fan_rect = fan_rotated.get_rect(center=fan_pos)
+    screen.blit(fan_rotated, fan_rect)
+
+    # Update the screen
+    pygame.display.update()
+
+    # Limit the frame rate
+    clock.tick(60)
