@@ -228,7 +228,7 @@ y_operational_data_pred, model_air_flowrate  = run_model_air_flowrate(X_norm_tra
 
 # Save the models 
 
-torch.save(model_next_state, 'Environment/model_next_state.pth')
-torch.save(model_air_temp_suplly_return, 'Environment/model_air_temp_suplly_return.pth')
-torch.save(model_air_flowrate, 'Environment/model_air_flowrate.pth')
+torch.save(model_next_state, 'Environment/model_next_state.pt')
+torch.save(model_air_temp_suplly_return, 'Environment/model_air_temp_suplly_return.pt')
+torch.save(model_air_flowrate, 'Environment/model_air_flowrate.pt')
 
