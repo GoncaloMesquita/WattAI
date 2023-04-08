@@ -62,7 +62,7 @@ import pygame
 pygame.init()
 
 # Set up the window
-size = (1200, 1200)
+size = (2200, 1200)
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Simulation")
 
@@ -94,13 +94,13 @@ while True:
     # Clear the screen
     # screen.fill((255, 255, 255))
 
-    screen.blit(background, (100, 200))
+    screen.blit(background, (0, 0))
 
     # Draw the fan
     
-    fan_rotated = pygame.transform.rotate(fan_image, fan_speed * 10)
-    fan_rect = fan_rotated.get_rect(center=fan_pos)
-    screen.blit(fan_rotated, fan_rect)
+    # fan_rwindow_sizeotated = pygame.transform.rotate(fan_image, fan_speed * 10)
+    # fan_rect = fan_rotated.get_rect(center=fan_pos)
+    # screen.blit(fan_rotated, fan_rect)
 
     # Update the screen
     pygame.display.update()
