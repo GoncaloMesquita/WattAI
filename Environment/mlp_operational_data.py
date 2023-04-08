@@ -63,8 +63,8 @@ class MLP(nn.Module):
 
 def run_model_enviorment(x_norm_train,y_train, x_norm_test, y_test, size_output ):
     input_size =11
-    hidden_size1 = 26
-    hidden_size2 = 26
+    hidden_size1 = 30
+    hidden_size2 = 30
     
     dropout_prob = 0
     output_size = size_output
@@ -202,28 +202,20 @@ Training.to_csv('Environment/training_environment.csv', index=False)
 Testing = pd.concat([x_test, Y_test ], axis=1, ignore_index=False)
 Testing.to_csv('Environment/testing_environment.csv', index=False)
 
-# X_norm_test, X_norm_train = normalize_data(x_train, x_test)
+X_norm_test, X_norm_train = normalize_data(x_train, x_test)
 
 # #######################################  Enviorment MODEL   ######################################
 
-# # y_ns_pred, model_next_state = run_model_enviorment(X_norm_train,Y_train, X_norm_test, Y_test, 2)
+y_ns_pred, model_next_state = run_model_enviorment(X_norm_train,Y_train.loc[:,['indoor_temp_interior', 'co2']], X_norm_test, Y_test.loc[:,['indoor_temp_interior', 'co2']], 2)
 
 
 # #######################################  Air Temp MODEL   #############################################
 
-# x_train_at, x_test_at, Y_train_at, Y_test_at = train_test_split(x_action_state , df.loc[:,['supply_air_temp', 'return_air_temp' ]], test_size=0.15, random_state=42)
-
-# #X_norm_test_at, X_norm_train_at = normalize_data(x_train_at, x_test_at)
-
-# # y_operational_data_pred, model_air_temp_suplly_return  = run_model_air_temp(X_norm_train , Y_train_at, X_norm_test, Y_test_at, 2)
+y_operational_data_pred, model_air_temp_suplly_return  = run_model_air_temp(X_norm_train , Y_train.loc[:,['supply_air_temp', 'return_air_temp']], X_norm_test, Y_test.loc[:,['supply_air_temp', 'return_air_temp']], 2)
 
 # #######################################  Air Flow rate model #########################################
 
-# x_train_fr, x_test_fr, Y_train_fr, Y_test_fr = train_test_split(x_action_state , df.loc[:,['filtered_air_flow_rate']], test_size=0.15, random_state=42)
-
-# #X_norm_test_fr, X_norm_train_fr = normalize_data(x_train_fr, x_test_fr)
-
-# # y_operational_data_pred, model_air_flowrate  = run_model_air_flowrate(X_norm_train , Y_train_fr, X_norm_test, Y_test_fr, 1)
+y_operational_data_pred, model_air_flowrate  = run_model_air_flowrate(X_norm_train , Y_train.loc[:,['filtered_air_flow_rate']], X_norm_test, Y_test.loc[:,['filtered_air_flow_rate']], 1 )
 
 
 # # Save the models 
