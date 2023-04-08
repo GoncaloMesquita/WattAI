@@ -11,6 +11,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchmetrics.functional import r2_score
+import pickle
 # from torcheval.metrics import R2Score
 # from sklearn.metrics import r2_score
 
@@ -20,6 +21,8 @@ def normalize_data(xtrain, xtest):
     scaler = preprocessing.StandardScaler()
     x_n_train = scaler.fit_transform(xtrain)
     x_n_test = scaler.transform(xtest)
+    with open('Environment/scaler_environment.pkl', 'wb') as f:
+        pickle.dump(scaler, f)
 
     return x_n_test, x_n_train
 
@@ -208,21 +211,22 @@ y_ns_pred, model_next_state = run_model_enviorment(X_norm_train,Y_train, X_norm_
 
 x_train_at, x_test_at, Y_train_at, Y_test_at = train_test_split(x_action_state , df.loc[:,['supply_air_temp', 'return_air_temp' ]], test_size=0.15, random_state=42)
 
-X_norm_test_at, X_norm_train_at = normalize_data(x_train_at, x_test_at)
+#X_norm_test_at, X_norm_train_at = normalize_data(x_train_at, x_test_at)
 
-y_operational_data_pred, model_air_temp_suplly_return  = run_model_air_temp(X_norm_train_at , Y_train_at, X_norm_test_at, Y_test_at, 2)
+y_operational_data_pred, model_air_temp_suplly_return  = run_model_air_temp(X_norm_train , Y_train_at, X_norm_test, Y_test_at, 2)
 
 #######################################  Air Flow rate model #########################################
 
 x_train_fr, x_test_fr, Y_train_fr, Y_test_fr = train_test_split(x_action_state , df.loc[:,['filtered_air_flow_rate']], test_size=0.15, random_state=42)
 
-X_norm_test_fr, X_norm_train_fr = normalize_data(x_train_fr, x_test_fr)
+#X_norm_test_fr, X_norm_train_fr = normalize_data(x_train_fr, x_test_fr)
 
-y_operational_data_pred, model_air_flowrate  = run_model_air_flowrate(X_norm_train_fr , Y_train_fr, X_norm_test_fr, Y_test_fr, 1)
+y_operational_data_pred, model_air_flowrate  = run_model_air_flowrate(X_norm_train , Y_train_fr, X_norm_test, Y_test_fr, 1)
 
 
 # Save the models 
 
-torch.save(model_next_state, 'Environment/model_next_state.h5')
-torch.save(model_air_temp_suplly_return, 'Environment/model_air_temp_suplly_return.h5')
-torch.save(model_air_flowrate, 'Environment/model_air_flowrate.h5')
+torch.save(model_next_state.state_dict(), 'Environment/model_next_state.h5')
+torch.save(model_air_temp_suplly_return.state_dict(), 'Environment/model_air_temp_suplly_return.h5')
+torch.save(model_air_flowrate.state_dict(), 'Environment/model_air_flowrate.h5')
+
