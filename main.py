@@ -23,7 +23,7 @@ y_test = test_data.iloc[:, 0]
 
 if __name__ == '__main__':
     # load all models and scalers
-    models = ['Energy_model/energy_model_normal_data.h5', 'Energy_model/energy_model_syn_data.h5', 'Energy_model/energy_model_augmented_data.h5']
+    models = ['Energy_model/energy_model_normal_data.h5', 'Energy_model/energy_model_syn_data.h5', 'Energy_model/energy_model_augmented_data.h5','Environment/model_next_state.h5','Environment/model_air_temp_suplly_return.h5','Environment/model_air_flowrate.h5' ]
     scalers = ['Energy_model/normal_data_scaler.pkl', 'Energy_model/syn_data_scaler.pkl', 'Energy_model/augmented_data_scaler.pkl']
     models_dict = dict()
     scalers_dict = dict()
