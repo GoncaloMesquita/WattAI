@@ -62,7 +62,7 @@ import pygame
 pygame.init()
 
 # Set up the window
-size = (2200, 1200)
+size = (1800, 1200)
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Simulation")
 

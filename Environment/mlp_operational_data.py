@@ -185,7 +185,6 @@ y_ns = y_ns.iloc[:-1]
 # y_ns.drop(['ns_indoor_temp_interior', 'ns_co2'],inplace=True, axis=1)
 
 print(df['indoor_temp_interior'])
-print(x_ns)
 
 x_action = df.loc[:,['zone_temp_cooling', 'zone_temp_heating', 'supplyfan_speed', 'returnfan_speed', 'outdoor_air_damper_position', 'Outdoor_temp']]
 x_action_state = pd.concat([x_action, x_ns], axis=1)   
@@ -194,7 +193,8 @@ x_action_state = pd.concat([x_action, x_ns], axis=1)
 df_ns = pd.concat([df, x_ns ], axis=1, ignore_index=False)
 df_ns.to_csv('Environment/data_set_environment.csv', index=False)
 
-x_train, x_test, Y_train, Y_test = train_test_split(x_action_state , df.loc[:,['indoor_temp_interior', 'co2']], test_size=0.15, random_state=42)
+x_train, x_test, Y_train, Y_test = train_test_split(x_action_state , df.loc[:,['indoor_temp_interior', 'co2','supply_air_temp', 'return_air_temp', 'filtered_air_flow_rate']], test_size=0.15, random_state=42)
+
 
 Training = pd.concat([x_train, Y_train ], axis=1, ignore_index=False)
 Training.to_csv('Environment/training_environment.csv', index=False)
@@ -202,33 +202,33 @@ Training.to_csv('Environment/training_environment.csv', index=False)
 Testing = pd.concat([x_test, Y_test ], axis=1, ignore_index=False)
 Testing.to_csv('Environment/testing_environment.csv', index=False)
 
-X_norm_test, X_norm_train = normalize_data(x_train, x_test)
+# X_norm_test, X_norm_train = normalize_data(x_train, x_test)
 
-#######################################  Enviorment MODEL   ######################################
+# #######################################  Enviorment MODEL   ######################################
 
-y_ns_pred, model_next_state = run_model_enviorment(X_norm_train,Y_train, X_norm_test, Y_test, 2)
-
-
-#######################################  Air Temp MODEL   #############################################
-
-x_train_at, x_test_at, Y_train_at, Y_test_at = train_test_split(x_action_state , df.loc[:,['supply_air_temp', 'return_air_temp' ]], test_size=0.15, random_state=42)
-
-#X_norm_test_at, X_norm_train_at = normalize_data(x_train_at, x_test_at)
-
-y_operational_data_pred, model_air_temp_suplly_return  = run_model_air_temp(X_norm_train , Y_train_at, X_norm_test, Y_test_at, 2)
-
-#######################################  Air Flow rate model #########################################
-
-x_train_fr, x_test_fr, Y_train_fr, Y_test_fr = train_test_split(x_action_state , df.loc[:,['filtered_air_flow_rate']], test_size=0.15, random_state=42)
-
-#X_norm_test_fr, X_norm_train_fr = normalize_data(x_train_fr, x_test_fr)
-
-y_operational_data_pred, model_air_flowrate  = run_model_air_flowrate(X_norm_train , Y_train_fr, X_norm_test, Y_test_fr, 1)
+# # y_ns_pred, model_next_state = run_model_enviorment(X_norm_train,Y_train, X_norm_test, Y_test, 2)
 
 
-# Save the models 
+# #######################################  Air Temp MODEL   #############################################
 
-torch.save(model_next_state, 'Environment/model_next_state.pt')
-torch.save(model_air_temp_suplly_return, 'Environment/model_air_temp_suplly_return.pt')
-torch.save(model_air_flowrate, 'Environment/model_air_flowrate.pt')
+# x_train_at, x_test_at, Y_train_at, Y_test_at = train_test_split(x_action_state , df.loc[:,['supply_air_temp', 'return_air_temp' ]], test_size=0.15, random_state=42)
+
+# #X_norm_test_at, X_norm_train_at = normalize_data(x_train_at, x_test_at)
+
+# # y_operational_data_pred, model_air_temp_suplly_return  = run_model_air_temp(X_norm_train , Y_train_at, X_norm_test, Y_test_at, 2)
+
+# #######################################  Air Flow rate model #########################################
+
+# x_train_fr, x_test_fr, Y_train_fr, Y_test_fr = train_test_split(x_action_state , df.loc[:,['filtered_air_flow_rate']], test_size=0.15, random_state=42)
+
+# #X_norm_test_fr, X_norm_train_fr = normalize_data(x_train_fr, x_test_fr)
+
+# # y_operational_data_pred, model_air_flowrate  = run_model_air_flowrate(X_norm_train , Y_train_fr, X_norm_test, Y_test_fr, 1)
+
+
+# # Save the models 
+
+# torch.save(model_next_state, 'Environment/model_next_state.pt')
+# torch.save(model_air_temp_suplly_return, 'Environment/model_air_temp_suplly_return.pt')
+# torch.save(model_air_flowrate, 'Environment/model_air_flowrate.pt')
 
