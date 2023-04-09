@@ -177,56 +177,16 @@ def pmv_ppd_predictor(indoor_temp, co2) -> Dict[str, list]:
     
     ### This needs to be ajusted to each specific case
     ## And I don't think this takes into account the number of persons in the room
-    if args.building_type == 'office':
-        activity = ['Typing',
-                    'Filing, seated',
-                    ]
-        garments = ['Standard office chair',
-                    'Double-breasted coat (thin)',
-                    'Boots',
-                    'Thick trousers',
-                    'T-shirt',
-                    ]
-    elif args.building_type == 'hospital':
-        activity = ['Walking about',
-                    'Writing',
-                    'Seated, heavy limb movement'
-                    ]
-        garments = ['Short-sleeve hospital gown',
-                    'Boots',
-                    'Calf length socks',
-                    'Thick trousers',
-                    ]
-    elif args.building_type == 'school':
-        activity = ['Typing',
-                    'Filing, seated',
-                    'Filing, standing',
-                    'Writing',
-                    'Walking about'
-                    ]
-        garments = ['Standard office chair',
-                    'Overalls',
-                    'Double-breasted coat (thin)',
-                    'Boots',
-                    'Calf length socks',
-                    'Thick trousers',
-                    'T-shirt',
-                    ]
-    elif args.building_type == 'residential':
-        activity = ['Typing',
-                    'Filing, seated',
-                    'Filing, standing',
-                    'Writing',
-                    'Walking about'
-                    ]
-        garments = []
-    elif args.building_type == 'gym':
-        activity = []
-        garments = []
-    else:
-        activity = []
-        garments = []        
-    
+    activity = ['Typing',
+                'Filing, seated',
+                ]
+    garments = ['Standard office chair',
+                'Double-breasted coat (thin)',
+                'Boots',
+                'Thick trousers',
+                'T-shirt',
+                ]
+
     
     ### Define the variables
     tdb = tr = indoor_temp  
@@ -243,12 +203,10 @@ def pmv_ppd_predictor(indoor_temp, co2) -> Dict[str, list]:
     ### Predict the PMV and PPD values
     results = pmv_ppd(tdb=tdb, tr=tr, vr=vr, rh=rh, met=met, clo=clo, standard='ASHRAE', units='SI') # See difference between ASHRAE and ISO !!
     
-    print(f'Average PMV: {np.mean(results["pmv"])} | Average PPD: {np.mean(results["ppd"])}')
     
     ### Take into account CO2 levels (ppm)
     ## Average of CO2 levels in a room: 400 ppm - 1000 ppm 
     results_aux = results.copy()
-    co2 = co2
     
     # I want to penalize the model when the CO2 levels are too high or too low 
     pmv_std = 2e-1*(abs((OPTIMAL_CO2_CONFORT_LEVEL - co2)*1e-3)) + 0.001 
@@ -262,7 +220,6 @@ def pmv_ppd_predictor(indoor_temp, co2) -> Dict[str, list]:
     results['ppd'] = results['ppd'] + ppd_noise
     
     # Compute the mse between the original and the noisy values
-    print(f'mse pmv: {mean_squared_error(results_aux["pmv"], results["pmv"])} | mse ppd: {mean_squared_error(results_aux["ppd"], results["ppd"])}')
     return results['pmv'], results['ppd']
 
 def main(args):

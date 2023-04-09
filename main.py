@@ -1,11 +1,9 @@
-import pybullet_envs
-import gym
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 from tensorflow import keras
 import torch
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import pandas as pd
 import sys
 sys.path.append('RL_agent')
@@ -46,13 +44,12 @@ if __name__ == '__main__':
     
     env = MLPEnvironment(Environment, 6, 5)
 
-    # env = gym.make('InvertedPendulumBulletEnv-v0')
     agent = Agent(input_dims=env.observation_space.shape, env=env, n_actions=env.action_space.shape[0])
-    n_games = 10
+    n_games = 100
 
-    filename = 'inverted_pendulum.png'
+    filename = 'plot_reward.png'
 
-    figure_file = 'plots/' + filename
+    figure_file = 'Plots/' + filename
 
     best_score = env.reward_range[0]
     score_history = []
@@ -63,12 +60,13 @@ if __name__ == '__main__':
         # env.render(mode='human')
 
     for i in range(n_games):
-        observation, index = env.reset()
+        observation, index = env.reset(data_set)
         done = False
         score = 0
         while not done:
+            index += 1
             action = agent.choose_action(observation)
-            observation_, reward, done, info = env.step(action)
+            observation_, reward, done, info = env.step(action, observation, models_dict, scalers_dict, data_set.iloc[index, 1])
             score += reward
             agent.remember(observation, action, reward, observation_, done)
             if not load_checkpoint:
