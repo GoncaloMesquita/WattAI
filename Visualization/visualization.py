@@ -71,11 +71,15 @@ background = pygame.image.load("Visualization/plant.png")
 background = pygame.transform.scale(background, (size))
 
 # Load the fan image
-fan_image = pygame.image.load('Visualization/fan.png')
-fan_image = pygame.transform.scale(fan_image, (100,100))
+fan_image1 = pygame.image.load('Visualization/fan.png')
+fan_image1 = pygame.transform.scale(fan_image1, (70,70))
+
+fan_image2 = pygame.image.load('Visualization/fan.png')
+fan_image2 = pygame.transform.scale(fan_image2, (70,70))
 
 # Set up the fan position and speed
-fan_pos = [100, 300]
+fan_pos1 = [600, 700]
+fan_pos2 = [800 , 900]
 fan_speed = 5
 
 # Set up the clock
@@ -98,9 +102,14 @@ while True:
 
     # Draw the fan
     
-    # fan_rwindow_sizeotated = pygame.transform.rotate(fan_image, fan_speed * 10)
-    # fan_rect = fan_rotated.get_rect(center=fan_pos)
-    # screen.blit(fan_rotated, fan_rect)
+    fan_rotated = pygame.transform.rotate(fan_image1, fan_speed * 100)
+    fan_rect = fan_rotated.get_rect(center=fan_pos1)
+    screen.blit(fan_rotated, fan_rect)
+
+    fan_rotated = pygame.transform.rotate(fan_image1, fan_speed * 100)
+    fan_rect = fan_rotated.get_rect(center=fan_pos1)
+    screen.blit(fan_rotated, fan_rect)
+
 
     # Update the screen
     pygame.display.update()
