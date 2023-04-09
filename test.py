@@ -4,13 +4,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout
+# from sklearn.model_selection import train_test_split
+# from sklearn.preprocessing import StandardScaler
+# from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+# import tensorflow as tf
+# from tensorflow import keras
+# from tensorflow.keras.models import Sequential
+# from tensorflow.keras.layers import Dense, Dropout
 
 from scipy.stats import norm
 from sklearn.neighbors import KernelDensity
@@ -39,7 +39,10 @@ from sklearn.neighbors import KernelDensity
 
 
 # read the data
-# data = pd.read_csv('dataset_building.csv')
+data = pd.read_csv('dataset_building.csv')
+a = data.describe()
+print(a.loc['min'])
+print(a.loc['max'])
 # train_data = pd.read_csv('Synthetic_data/clean_synthetic_data.csv')
 # train_data = pd.read_csv('Training_data.csv')
 # validation_data = pd.read_csv('Training_data.csv')
