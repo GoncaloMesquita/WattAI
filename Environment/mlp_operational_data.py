@@ -165,10 +165,7 @@ def run_model_air_flowrate(x_norm_train,y_train, x_norm_test, y_test, size_outpu
 
 
 ##################################################### Main #####################################################
-if __name__ == '__main__':
-    df = pd.read_csv('dataset_building.csv')
 
-<<<<<<< HEAD
 if __name__ == '__main__':
 
     df = pd.read_csv('dataset_building.csv')
@@ -179,26 +176,6 @@ if __name__ == '__main__':
     x_ns = y_ns.iloc[1:]
     x_ns = x_ns.reset_index(drop=True)
     y_ns = y_ns.iloc[:-1]
-=======
-    y_ns= pd.DataFrame(df.loc[:,['indoor_temp_interior', 'co2','supply_air_temp', 'return_air_temp', 'filtered_air_flow_rate']].values, columns=['ns_indoor_temp_interior', 'ns_co2','ns_supply_air_temp', 'ns_return_air_temp', 'ns_filtered_air_flow_rate'])
-
-    df = df.iloc[:-1]
-    x_ns = y_ns.iloc[1:]
-    x_ns = x_ns.reset_index(drop=True)
-    y_ns = y_ns.iloc[:-1]
-
-
-    # y_next_sate = y_ns.drop([ 'ns_supply_air_temp', 'ns_return_air_temp', 'ns_filtered_air_flow_rate'], axis=1)
-    # y_operational_data = y_ns.drop([ 'ns_indoor_temp_interior', 'ns_co2'], axis=1)
-    #print(y_ns)
-    # y_ns.drop(['ns_indoor_temp_interior', 'ns_co2'],inplace=True, axis=1)
-
-    print(df['indoor_temp_interior'])
-
-    x_action = df.loc[:,['zone_temp_cooling', 'zone_temp_heating', 'supplyfan_speed', 'returnfan_speed', 'outdoor_air_damper_position', 'Outdoor_temp']]
-    x_action_state = pd.concat([x_action, x_ns], axis=1)   
-
->>>>>>> bb82c8ead90cd85b3175a87b0b23eda2c211ca6e
 
     df_ns = pd.concat([df, x_ns ], axis=1, ignore_index=False)
     df_ns.to_csv('Environment/data_set_environment.csv', index=False)
