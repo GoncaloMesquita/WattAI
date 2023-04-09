@@ -22,9 +22,11 @@ from mlp_operational_data import MLP
 # test_data = pd.read_csv('Hold_out_data.csv')
 # X_test = test_data.iloc[:, range(1,12)]
 # y_test = test_data.iloc[:, 0]
-test_data = pd.read_csv('Environment/testing_environment.csv')
-X_test = test_data.iloc[:, range(11)]
-y_test = test_data.iloc[:, [13,14]]
+# test_data = pd.read_csv('Environment/testing_environment.csv')
+# X_test = test_data.iloc[:, range(11)]
+# y_test = test_data.iloc[:, 15]
+data_set = pd.read_csv('dataset_building.csv')
+data_set = data_set.iloc[:-96]
 if __name__ == '__main__':
     # load all models and scalers
     models = ['Energy_model/energy_model_augmented_data.h5','Environment/model_next_state.pt','Environment/model_air_temp_suplly_return.pt','Environment/model_air_flowrate.pt' ]
@@ -41,13 +43,10 @@ if __name__ == '__main__':
         scaler = sca.split('/')[-1].split('.')[0]
         with open(sca, 'rb') as f:
             scalers_dict[scaler] = pickle.load(f)
+    
+    env = MLPEnvironment(Environment, 6, 5)
 
-    X_test = scalers_dict['scaler_environment'].transform(X_test)    
-    y_pred = models_dict['model_air_temp_suplly_return'](torch.tensor(X_test).float())
-    # r2_score
-    r2 = r2_score(y_test, y_pred.detach().numpy())
-    print('R2 score: ', r2)
-    env = gym.make('InvertedPendulumBulletEnv-v0')
+    # env = gym.make('InvertedPendulumBulletEnv-v0')
     agent = Agent(input_dims=env.observation_space.shape, env=env, n_actions=env.action_space.shape[0])
     n_games = 10
 
@@ -61,10 +60,10 @@ if __name__ == '__main__':
 
     if load_checkpoint:
         agent.load_models()
-        env.render(mode='human')
+        # env.render(mode='human')
 
     for i in range(n_games):
-        observation = env.reset()
+        observation, index = env.reset()
         done = False
         score = 0
         while not done:
