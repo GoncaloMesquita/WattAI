@@ -28,10 +28,10 @@ def Environment(action, state, models_dict, scalers_dict, next_outdoor_temp):
     energy = models_dict['energy_model_augmented_data'].predict(scaled_features, verbose=0)
     # Comfort prediction
 
-    pmv, ppd = comfort_predictor.pmv_ppd_predictor(next_state[:,1], next_state[:,2])
+    # pmv, ppd = comfort_predictor.pmv_ppd_predictor(next_state[:,1], next_state[:,2])
     # Reward calculation
-    # reward = - 0.4*energy 
-    reward = - 0.4*energy + 0.6*(abs(3-pmv) + 100-ppd)
+    reward = - 0.4*energy 
+    # reward = - 0.4*energy + 0.6*(abs(3-pmv) + 100-ppd)
 
 
     return next_state[0], reward[0,0]

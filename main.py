@@ -45,7 +45,7 @@ if __name__ == '__main__':
     env = MLPEnvironment(Environment, 6, 5)
 
     agent = Agent(input_dims=env.observation_space.shape, env=env, n_actions=env.action_space.shape[0])
-    n_games = 100
+    n_games = 126
 
     filename = 'plot_reward.png'
 
