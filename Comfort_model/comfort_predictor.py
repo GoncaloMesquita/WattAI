@@ -24,6 +24,13 @@ from pathlib import Path
 
 import os
 
+from typing import Dict
+
+from sklearn.metrics import mean_squared_error
+
+MAX_CO2_CONFORT_LEVEL = 1500 # ppm
+OPTIMAL_CO2_CONFORT_LEVEL = 500 # ppm
+
 
 def get_args_parser():
    
@@ -39,7 +46,7 @@ def get_args_parser():
     return parser
 
 
-def predict_pmv_ppd(df, args = None) -> dict[str, list]:
+def predict_pmv_ppd(df, args = None) -> Dict[str, list]:
     """ Predicts the PMV and PPD values for a given dataset.
     
     PMV: Predicted Mean Vote | PPD: Predicted Percentage of Dissatisfied
@@ -118,7 +125,7 @@ def predict_pmv_ppd(df, args = None) -> dict[str, list]:
     met = np.ones(len(df)) * met
     icl = sum([clo_individual_garments[garm] for garm in garments])
     icl = np.ones(len(df)) * icl
-    v = np.ones(len(df)) * 0.3   # average air speed in m/s -> THIS NEEDS TO BE ADJUSTED TO THE RIGHT VALUE
+    v = np.ones(len(df)) * 0.15   # average air speed in m/s -> THIS NEEDS TO BE ADJUSTED TO THE RIGHT VALUE
     rh = np.ones(len(df)) * 50   # relative humidity in % ---> THIS NEEDS TO BE ADJUSTED TO THE RIGHT VALUE
     vr = v_relative(v=v, met=met)
     clo = clo_dynamic(clo=icl, met=met)
@@ -127,6 +134,27 @@ def predict_pmv_ppd(df, args = None) -> dict[str, list]:
     ### Predict the PMV and PPD values
     results = pmv_ppd(tdb=tdb, tr=tr, vr=vr, rh=rh, met=met, clo=clo, standard='ASHRAE', units='SI') # See difference between ASHRAE and ISO !!
     
+    print(f'Average PMV: {np.mean(results["pmv"])} | Average PPD: {np.mean(results["ppd"])}')
+    
+    ### Take into account CO2 levels (ppm)
+    ## Average of CO2 levels in a room: 400 ppm - 1000 ppm 
+    results_aux = results.copy()
+    co2 = df['co2'].values
+    co2 = np.array(co2)
+    
+    # I want to penalize the model when the CO2 levels are too high or too low 
+    pmv_std = 2e-1*(abs((OPTIMAL_CO2_CONFORT_LEVEL - co2)*1e-3)) + 0.001 
+    ppd_std = 1*(abs((OPTIMAL_CO2_CONFORT_LEVEL - co2)*1e-3)) + 0.001
+
+    pmv_noise = np.random.normal(0, pmv_std)
+    ppd_noise = np.random.normal(0, ppd_std)
+    
+    #print(f"Average PMV noise: {np.mean(pmv_noise)} | Average PPD noise: {np.mean(ppd_noise)}") 
+    results['pmv'] = results['pmv'] + pmv_noise
+    results['ppd'] = results['ppd'] + ppd_noise
+    
+    # Compute the mse between the original and the noisy values
+    print(f'mse pmv: {mean_squared_error(results_aux["pmv"], results["pmv"])} | mse ppd: {mean_squared_error(results_aux["ppd"], results["ppd"])}')
     return results['pmv'], results['ppd']
 
 def main(args):
@@ -144,9 +172,10 @@ def main(args):
     print(f"Average PMV: {np.mean(pmv)} | Average PPD: {np.mean(ppd)}")
 
     ### Save the results
-    df['pmv'] = pmv
-    df['ppd'] = ppd
-    df.to_csv("data_w_confort.csv", index=False)
+    df_confort = pd.DataFrame()
+    df_confort['pmv'] = pmv
+    df_confort['ppd'] = ppd
+    df_confort.to_csv("Comfort_model/confort.csv", index=False)
 
     return
 
