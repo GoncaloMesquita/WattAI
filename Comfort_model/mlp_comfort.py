@@ -56,29 +56,29 @@ def get_args_parser():
 
     
     # Training parameters
-    parser.add_argument('-epochs', default=30, type=int)
-    parser.add_argument('-batch_size', default=256, type=int)
+    parser.add_argument('--epochs', default=30, type=int)
+    parser.add_argument('--batch_size', default=256, type=int)
     
     # Learning rate
-    parser.add_argument('-learning_rate', type=float, default=0.005)
+    parser.add_argument('--learning_rate', type=float, default=0.005)
         
     # Optimizer
-    parser.add_argument('-optimizer', choices=['sgd', 'adam'], default='sgd')   
+    parser.add_argument('--optimizer', choices=['sgd', 'adam'], default='sgd')   
     parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
                         help='SGD momentum (default: 0.9)')
     
     # Loss function 
-    parser.add_argument('-loss', choices=['mse', 'mae'], default='mse')
+    parser.add_argument('--loss', choices=['mse', 'mae'], default='mse')
     parser.add_argument('--weight-decay', type=float, default=0.05,
                         help='weight decay (default: 0.05)')
-    parser.add_argument('-dropout', type=float, default=0.1,
+    parser.add_argument('--dropout', type=float, default=0.1,
                         help='Dropout rate (default: 0.1)')
     
     # Architecture parameters
-    parser.add_argument('-input_size', type=int, default=2)
-    parser.add_argument('-hidden_layers', type=int, nargs='+', default=[64,16])
-    parser.add_argument('-output_size', type=int, default=2)
-    parser.add_argument('-activation', choices=['relu', 'tanh'], default='relu')
+    parser.add_argument('--input_size', type=int, default=2)
+    parser.add_argument('--hidden_layers', type=int, nargs='+', default=[64,16])
+    parser.add_argument('--output_size', type=int, default=2)
+    parser.add_argument('--activation', choices=['relu', 'tanh'], default='relu')
 
  
     return parser
@@ -98,6 +98,35 @@ def Predict_Comfort(input_file):
 
 def Process_Data(train_data, test_data, args = None):
     
+    # Split the train and test datasets into X (features) and y (target)
+    # Targes : pmv and ppd
+    x_train = train_data.iloc[:,0:-2].values
+    y_train = train_data.iloc[:,-2:].values
+    x_test = test_data.iloc[:,0:-2].values
+    y_test = test_data.iloc[:,-2:].values
+    
+    # Apply feature scaling to the train and test datasets separately
+    sc = StandardScaler()
+    x_train = sc.fit_transform(x_train)
+    x_test = sc.transform(x_test)
+    
+    # Save the scaler
+    pickle.dump(sc, open(args.output_dir + 'mlp_comfort_scaler.pkl','wb'))
+
+    return x_train, y_train, x_test, y_test
+
+def Process_Data_Env(train_data, test_data, args = None):
+    
+    train_data = train_data.drop(['supply_air_temp',
+                                  'return_air_temp',
+                                  'filtered_air_flow_rate'], axis=1)
+    
+    test_data = test_data.drop(['supply_air_temp',
+                                'return_air_temp',
+                                'filtered_air_flow_rate'], axis=1)
+    
+    print(train_data.iloc[:,-2:].columns)
+    print(test_data.iloc[:, 0:-2].columns)
     # Split the train and test datasets into X (features) and y (target)
     # Targes : pmv and ppd
     x_train = train_data.iloc[:,0:-2].values
@@ -276,6 +305,7 @@ def train_step(model: torch.nn.Module,
         # Calculate and accumulate mse and r2 scores
         y_pred_np = y_pred.detach().cpu().numpy().squeeze()
         y_np = y.detach().cpu().numpy().squeeze()
+                
         train_mse += ((y_pred_np - y_np) ** 2).mean()
         train_r2 += r2_score(y_np, y_pred_np)
 
@@ -416,9 +446,10 @@ def engine(model: torch.nn.Module,
         # Save model if test r2 score is better than previous best
         if test_r2 > min_test_r2:
             min_test_r2 = test_r2
-            save_model(model=model, 
+            """ save_model(model=model, 
                        target_dir= args.output_dir,
-                       model_name="best_mlp_comfort.pth")
+                       model_name="best_mlp_comfort.pth") """
+            torch.save(model , args.output_dir + "best_mlp_comfort.pt")
         
         # early stopping
         early_stopping(train_loss, test_loss)
@@ -488,10 +519,17 @@ def main(args):
         
     # Concatenate the two dataframes
     df_train = pd.concat([df_synthetic, df_building], axis=0)
-            
+    
+    """ df_train = pd.read_csv(args.train_file)
+    df_test = pd.read_csv(args.test_file)
+    
+    print(df_train.describe()) """
+                    
     # Process the data
     x_train, y_train, x_test, y_test = Process_Data(df_train, df_test, args=args)
+    #x_train, y_train, x_test, y_test = Process_Data_Env(df_train, df_test, args=args)
     
+        
     # Create the dataset
     train_dataset = FeatureDataset(x_train, y_train)
     test_dataset = FeatureDataset(x_test, y_test)
@@ -504,7 +542,7 @@ def main(args):
     train_dataloader = torch.utils.data.DataLoader(train_dataset, 
                                                    batch_size=args.batch_size, 
                                                    shuffle=True,
-                                                   num_workers=NUM_WORKERS, 
+                                                   num_workers=NUM_WORKERS,     
                                                    pin_memory=True)
     
     test_dataset = torch.utils.data.DataLoader(test_dataset, 
