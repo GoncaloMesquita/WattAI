@@ -1,13 +1,9 @@
 """
 
-The goal of this script is to use an MLP to predict the state of 
-some state variables such as indoor temperature and supply fan speed
-for the next time step.
+The goal of this script is to use an MLP to predict the comfort of a person in a room 
+based on the temperature and CO2 levels.
 
-Run the script with the following command:
-python mlp_ops_2.py --input_file dataset_building.csv 
-
-Implemented by Gonçalo Mesquita and Diogo Araújo.
+Implemented by Diogo Araújo.
 
 """
 import pandas as pd
@@ -17,9 +13,11 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
-#from sklearn.metrics import r2_score
-from torchmetrics.functional import r2_score
+from sklearn.metrics import r2_score
 
+import pickle
+
+#from torchmetrics.functional import r2_score
 
 import itertools
 
@@ -36,6 +34,8 @@ import os
 from typing import Dict, List, Tuple
 from tqdm.auto import tqdm
 
+import comfort_predictor as cp
+
 # import EarlyStopping
 #from pytorccondhtools import EarlyStopping
 
@@ -49,17 +49,18 @@ def get_args_parser():
     
     ## Add arguments here
     parser.add_argument('--output_dir', default='', help='path where to save, empty for no saving')
-    parser.add_argument('--input_file_training', default='', help='path to input file')
-    parser.add_argument('--input_file_testing', default='', help='path to input file')
+    parser.add_argument('--train_file', default='Synthetic_data/clean_synthetic_data.csv', help='path to input file')
+    parser.add_argument('--test_file', default='Hold_out_data.csv', help='path to input file')
+    parser.add_argument('--validation_file', default='Training_data.csv', help='path to input file')
     parser.add_argument('--seed', default=42, type=int, help='random seed')
 
     
     # Training parameters
-    parser.add_argument('-epochs', default=300, type=int)
-    parser.add_argument('-batch_size', default=64, type=int)
+    parser.add_argument('-epochs', default=30, type=int)
+    parser.add_argument('-batch_size', default=256, type=int)
     
     # Learning rate
-    parser.add_argument('-learning_rate', type=float, default=0.01)
+    parser.add_argument('-learning_rate', type=float, default=0.005)
         
     # Optimizer
     parser.add_argument('-optimizer', choices=['sgd', 'adam'], default='sgd')   
@@ -70,35 +71,47 @@ def get_args_parser():
     parser.add_argument('-loss', choices=['mse', 'mae'], default='mse')
     parser.add_argument('--weight-decay', type=float, default=0.05,
                         help='weight decay (default: 0.05)')
-    parser.add_argument('-dropout', type=float, default=0.0,
-                        help='Dropout rate (default: 0.0)')
+    parser.add_argument('-dropout', type=float, default=0.1,
+                        help='Dropout rate (default: 0.1)')
     
     # Architecture parameters
-    parser.add_argument('-input_size', type=int, default=11)
-    parser.add_argument('-hidden_layers', type=int, nargs='+', default=[50,])
-    parser.add_argument('-output_size', type=int, default=1)
+    parser.add_argument('-input_size', type=int, default=2)
+    parser.add_argument('-hidden_layers', type=int, nargs='+', default=[64,16])
+    parser.add_argument('-output_size', type=int, default=2)
     parser.add_argument('-activation', choices=['relu', 'tanh'], default='relu')
 
  
     return parser
 
-def normalize_data(train_file, test_file):
+def Predict_Comfort(input_file):
     
-    # Read the train and test CSV files
-    train_data = pd.read_csv(train_file)
-    test_data = pd.read_csv(test_file)
+    df = pd.read_csv(input_file)
+    pmv, ppd = cp.pmv_ppd_predictor(np.array(df['indoor_temp_interior'].values), 
+                                    np.array(df['co2'].values))
+    
+    df['pmv'] = pmv
+    df['ppd'] = ppd
+    
+    df = df[['co2', 'indoor_temp_interior', 'pmv', 'ppd']]
+        
+    return df
 
+def Process_Data(train_data, test_data, args = None):
+    
     # Split the train and test datasets into X (features) and y (target)
-    x_train = train_data.iloc[:, 0:-2].values
-    y_train = train_data.iloc[:, -1].values
-    x_test = test_data.iloc[:, 0:-2].values
-    y_test = test_data.iloc[:, -1].values
+    # Targes : pmv and ppd
+    x_train = train_data.iloc[:,0:-2].values
+    y_train = train_data.iloc[:,-2:].values
+    x_test = test_data.iloc[:,0:-2].values
+    y_test = test_data.iloc[:,-2:].values
     
-
     # Apply feature scaling to the train and test datasets separately
     sc = StandardScaler()
     x_train = sc.fit_transform(x_train)
     x_test = sc.transform(x_test)
+    
+    # Save the scaler
+    pickle.dump(sc, open(args.output_dir + 'mlp_comfort_scaler.pkl','wb'))
 
     return x_train, y_train, x_test, y_test
 
@@ -118,13 +131,12 @@ class FeatureDataset(Dataset):
  
 class MLP(nn.Module):
     
-    def __init__(self, n_features, hidden_size, n_outputs, layers,
+    def __init__(self, n_features, n_outputs, layers,
             activation_type, dropout, **kwargs):
         """
         n_features (int)
-        hidden_size (int)
         n_outputs (int)
-        layers (int)
+        layers (list): list of hidden layers sizes
         activation_type (str)
         dropout (float): dropout probability
         """
@@ -139,7 +151,7 @@ class MLP(nn.Module):
         hidden_layers = []
 
         # (3) Compose our feedfoward network accordingly with the hyperparameters chosen.
-        for _ in range(layers):
+        for hidden_size in layers:
                         
             # We will had the hidden layer to our feedfoward network.
             hidden_layers.append(nn.Linear(hidden_input_size, hidden_size))
@@ -181,7 +193,6 @@ class EarlyStopping:
             if self.counter >= self.tolerance:  
                 self.early_stop = True
 
-# Save the pytorch model
 def save_model(model: torch.nn.Module,
                target_dir: str,
                model_name: str):
@@ -210,7 +221,6 @@ def save_model(model: torch.nn.Module,
     torch.save(obj=model.state_dict(),
              f=model_save_path)
     
-# Train step in one epoch
 def train_step(model: torch.nn.Module, 
                dataloader: torch.utils.data.DataLoader, 
                loss_fn: torch.nn.Module, 
@@ -276,7 +286,6 @@ def train_step(model: torch.nn.Module,
     
     return train_loss, train_mse, train_r2
 
-# Test step in one epoch
 def test_step(model: torch.nn.Module, 
               dataloader: torch.utils.data.DataLoader, 
               loss_fn: torch.nn.Module,
@@ -303,7 +312,7 @@ def test_step(model: torch.nn.Module,
     with torch.inference_mode():
         
         # Loop through DataLoader batches
-        for _, (X, y) in enumerate(dataloader):
+        for X, y in dataloader:
             
             # Send data to target device
             X, y = X.to(device), y.to(device)
@@ -329,14 +338,14 @@ def test_step(model: torch.nn.Module,
 
     return test_loss, test_mse, test_r2
 
-# Train and test for N epochs
 def engine(model: torch.nn.Module, 
           train_dataloader: torch.utils.data.DataLoader, 
           test_dataloader: torch.utils.data.DataLoader, 
           optimizer: torch.optim.Optimizer,
           loss_fn: torch.nn.Module,
           epochs: int,
-          device: torch.device) -> Dict[str, List]:
+          device: torch.device,
+          args = None) -> Dict[str, List]:
     """Trains and tests a PyTorch model.
 
     Passes a target PyTorch models through train_step() and test_step()
@@ -407,7 +416,9 @@ def engine(model: torch.nn.Module,
         # Save model if test r2 score is better than previous best
         if test_r2 > min_test_r2:
             min_test_r2 = test_r2
-            save_model(model, "best_model.pth")
+            save_model(model=model, 
+                       target_dir= args.output_dir,
+                       model_name="best_mlp_comfort.pth")
         
         # early stopping
         early_stopping(train_loss, test_loss)
@@ -418,8 +429,7 @@ def engine(model: torch.nn.Module,
     # Return the filled results at the end of the epochs
     return results
 
-# Plot loss curves of a model
-def plot_loss_curves(results):
+def plot_loss_curves(results, output_dir):
     """Plots training curves of a results dictionary.
     Args:
         results (dict): dictionary containing list of values, e.g.
@@ -437,8 +447,30 @@ def plot_loss_curves(results):
     plt.title("Loss")
     plt.xlabel("Epochs")
     plt.legend()
-     
+    plt.savefig(os.path.join(output_dir, "loss.png"))
 
+def plot_r2_curves(results, output_dir):
+    """Plots training curves of a results dictionary.
+    Args:
+        results (dict): dictionary containing list of values, e.g.
+            {"train_loss": [...],
+             "test_loss": [...],
+    """
+    loss = results["train_r2"]
+    test_loss = results["test_r2"]
+
+    epochs = range(len(results["train_r2"]))
+
+    # Plot loss
+    plt.close()
+    plt.cla()
+    plt.plot(epochs, loss, label="train_r2")
+    plt.plot(epochs, test_loss, label="test_r2")
+    plt.title("r2")
+    plt.xlabel("Epochs")
+    plt.legend()
+    plt.savefig(os.path.join(output_dir, "r2.png"))
+    
 def main(args):
     
     # Check device
@@ -448,9 +480,18 @@ def main(args):
     # Set random seeds
     torch.manual_seed(args.seed)
     
-    # Normalize the data
-    x_train, y_train, x_test, y_test = normalize_data(args.input_file_training, args.input_file_testing)
-
+    ############# Predict Comfort (targets) ############
+        
+    df_building = Predict_Comfort(args.validation_file)
+    df_synthetic = Predict_Comfort(args.train_file)
+    df_test = Predict_Comfort(args.test_file)
+        
+    # Concatenate the two dataframes
+    df_train = pd.concat([df_synthetic, df_building], axis=0)
+            
+    # Process the data
+    x_train, y_train, x_test, y_test = Process_Data(df_train, df_test, args=args)
+    
     # Create the dataset
     train_dataset = FeatureDataset(x_train, y_train)
     test_dataset = FeatureDataset(x_test, y_test)
@@ -465,6 +506,7 @@ def main(args):
                                                    shuffle=True,
                                                    num_workers=NUM_WORKERS, 
                                                    pin_memory=True)
+    
     test_dataset = torch.utils.data.DataLoader(test_dataset, 
                                                batch_size=args.batch_size, 
                                                shuffle=False, 
@@ -472,8 +514,11 @@ def main(args):
                                                pin_memory=True)
     
     # Define the model  
-    model = MLP(args.input_size, args.hidden_layers[0], args.output_size, len(args.hidden_layers), 
+    model = MLP(args.input_size, args.output_size, args.hidden_layers, 
                 args.activation, args.dropout).to(device)
+    
+    print("----------- Model Architecture -----------")
+    print(model)
 
     # Define the loss function
     criterion = nn.MSELoss() if args.loss == 'mse' else nn.L1Loss()
@@ -491,10 +536,12 @@ def main(args):
                      optimizer=optimizer,
                      loss_fn=criterion,
                      epochs=args.epochs,
-                     device=device)    
+                     device=device,
+                     args=args)    
     
     # Plot the loss curves
-    plot_loss_curves(results)
+    plot_loss_curves(results, args.output_dir)
+    plot_r2_curves(results, args.output_dir)
 
     return
 

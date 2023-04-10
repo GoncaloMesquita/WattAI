@@ -45,7 +45,6 @@ def get_args_parser():
       
     return parser
 
-
 def predict_pmv_ppd(df, args = None) -> Dict[str, list]:
     """ Predicts the PMV and PPD values for a given dataset.
     
