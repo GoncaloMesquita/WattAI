@@ -24,11 +24,12 @@ class CriticNetwork(nn.Module):
 
         self.optimizer = optim.Adam(self.parameters(), lr=beta)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        # self.device = T.device('cpu')
 
         self.to(self.device)
 
     def forward(self, state, action):
-        action_value = self.fc1(T.cat([state, action], dim=1))
+        action_value = self.fc1(T.cat([state, action.float()], dim=1))
         action_value = F.relu(action_value)
         action_value = self.fc2(action_value)
         action_value = F.relu(action_value)
@@ -60,6 +61,7 @@ class ValueNetwork(nn.Module):
 
         self.optimizer = optim.Adam(self.parameters(), lr=beta)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        # self.device = T.device('cpu')
 
         self.to(self.device)
 
@@ -80,7 +82,7 @@ class ValueNetwork(nn.Module):
         self.load_state_dict(T.load(self.checkpoint_file))
 
 class ActorNetwork(nn.Module):
-    def __init__(self, alpha, input_dims, max_action, fc1_dims=256, 
+    def __init__(self, alpha, input_dims, max_action, min_action, fc1_dims=256, 
             fc2_dims=256, n_actions=2, name='actor', chkpt_dir='RL_agent/sac'):
         super(ActorNetwork, self).__init__()
         self.input_dims = input_dims
@@ -91,6 +93,8 @@ class ActorNetwork(nn.Module):
         self.checkpoint_dir = chkpt_dir
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name+'_sac')
         self.max_action = max_action
+        self.min_action = min_action
+        self.action_range = self.max_action - self.min_action
         self.reparam_noise = 1e-6
 
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
@@ -100,6 +104,7 @@ class ActorNetwork(nn.Module):
 
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        # self.device = T.device('cpu')
 
         self.to(self.device)
 
@@ -108,7 +113,7 @@ class ActorNetwork(nn.Module):
         prob = F.relu(prob)
         prob = self.fc2(prob)
         prob = F.relu(prob)
-
+        
         mu = self.mu(prob)
         sigma = self.sigma(prob)
 
@@ -125,9 +130,10 @@ class ActorNetwork(nn.Module):
         else:
             actions = probabilities.sample()
 
-        action = T.tanh(actions)*T.tensor(self.max_action).to(self.device)
+        aux = T.tanh(actions)
+        action = T.tensor(self.min_action).to(self.device) + 0.5 * (T.tensor(self.action_range).to(self.device) * (aux + 1))
         log_probs = probabilities.log_prob(actions)
-        log_probs -= T.log(1-action.pow(2)+self.reparam_noise)
+        log_probs -= T.log(1-aux.pow(2)+self.reparam_noise)
         log_probs = log_probs.sum(1, keepdim=True)
 
         return action, log_probs

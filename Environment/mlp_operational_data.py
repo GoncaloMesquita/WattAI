@@ -180,37 +180,6 @@ if __name__ == '__main__':
     df_ns = pd.concat([df, x_ns ], axis=1, ignore_index=False)
     df_ns.to_csv('Environment/data_set_environment.csv', index=False)
 
-<<<<<<< HEAD
-    x_action = df.loc[:,['zone_temp_cooling', 'zone_temp_heating', 'supplyfan_speed', 'returnfan_speed', 'outdoor_air_damper_position', 'Outdoor_temp']]
-    x_action_state = pd.concat([x_action, x_ns], axis=1)   
-
-
-    df_ns = pd.concat([df, x_ns ], axis=1, ignore_index=False)
-    df_ns.to_csv('Environment/data_set_environment.csv', index=False)
-    print(df_ns.loc[:,['ns_indoor_temp_interior', 'indoor_temp_interior']])
-
-    x_train, x_test, Y_train, Y_test = train_test_split(x_action_state , df.loc[:,['indoor_temp_interior', 'co2','supply_air_temp', 'return_air_temp', 'filtered_air_flow_rate']], test_size=0.15, random_state=42)
-
-    Training = pd.concat([x_train, Y_train ], axis=1, ignore_index=False)
-    Training.to_csv('Environment/training_environment.csv', index=False)
-
-    Testing = pd.concat([x_test, Y_test ], axis=1, ignore_index=False)
-    Testing.to_csv('Environment/testing_environment.csv', index=False)
-
-    X_norm_test, X_norm_train = normalize_data(x_train, x_test)
-
-    # #######################################  Enviorment MODEL   ######################################
-
-    y_ns_pred, model_next_state = run_model_enviorment(X_norm_train,Y_train.loc[:,['indoor_temp_interior', 'co2']], X_norm_test, Y_test.loc[:,['indoor_temp_interior', 'co2']], 2)
-
-    # #######################################  Air Temp MODEL   #############################################
-
-    y_operational_data_pred, model_air_temp_suplly_return  = run_model_air_temp(X_norm_train , Y_train.loc[:,['supply_air_temp', 'return_air_temp']], X_norm_test, Y_test.loc[:,['supply_air_temp', 'return_air_temp']], 2)
-
-    # #######################################  Air Flow rate model #########################################
-
-    y_operational_data_pred, model_air_flowrate  = run_model_air_flowrate(X_norm_train , Y_train.loc[:,['filtered_air_flow_rate']], X_norm_test, Y_test.loc[:,['filtered_air_flow_rate']], 1 )
-=======
     x_train, x_test, Y_train, Y_test = train_test_split(x_action_state , df.loc[:,['indoor_temp_interior', 'co2','supply_air_temp', 'return_air_temp', 'filtered_air_flow_rate']], test_size=0.15, random_state=42)
 
 
@@ -235,15 +204,9 @@ if __name__ == '__main__':
 
     y_operational_data_pred, model_air_flowrate  = run_model_air_flowrate(X_norm_train , Y_train.loc[:,['filtered_air_flow_rate']], X_norm_test, Y_test.loc[:,['filtered_air_flow_rate']], 1 )
 
->>>>>>> bb82c8ead90cd85b3175a87b0b23eda2c211ca6e
 
     # # Save the models 
 
-<<<<<<< HEAD
-    # # Save the models 
-
-=======
->>>>>>> bb82c8ead90cd85b3175a87b0b23eda2c211ca6e
     # torch.save(model_next_state, 'Environment/model_next_state.pt')
     # torch.save(model_air_temp_suplly_return, 'Environment/model_air_temp_suplly_return.pt')
     # torch.save(model_air_flowrate, 'Environment/model_air_flowrate.pt')

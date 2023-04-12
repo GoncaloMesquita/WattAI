@@ -16,6 +16,7 @@ from utils import plot_learning_curve
 from Environment import Environment
 from Gym_Environment import MLPEnvironment
 from mlp_operational_data import MLP
+from mlp_comfort import MLP_comfort
 
 # test_data = pd.read_csv('Hold_out_data.csv')
 # X_test = test_data.iloc[:, range(1,12)]
@@ -24,11 +25,11 @@ from mlp_operational_data import MLP
 # X_test = test_data.iloc[:, range(11)]
 # y_test = test_data.iloc[:, 15]
 data_set = pd.read_csv('dataset_building.csv')
-data_set = data_set.iloc[:-96]
+
 if __name__ == '__main__':
     # load all models and scalers
-    models = ['Energy_model/energy_model_augmented_data.h5','Environment/model_next_state.pt','Environment/model_air_temp_suplly_return.pt','Environment/model_air_flowrate.pt' ]
-    scalers = ['Energy_model/augmented_data_scaler.pkl', 'Environment/scaler_environment.pkl']
+    models = ['Energy_model/energy_model_augmented_data.h5','Environment/model_next_state.pt','Environment/model_air_temp_suplly_return.pt','Environment/model_air_flowrate.pt', 'Comfort_model/best_mlp_comfort.pt' ]
+    scalers = ['Energy_model/augmented_data_scaler.pkl', 'Environment/scaler_environment.pkl', 'Comfort_model/mlp_comfort_scaler.pkl']
     models_dict = dict()
     scalers_dict = dict()
     for mod in models:
@@ -44,8 +45,9 @@ if __name__ == '__main__':
     
     env = MLPEnvironment(Environment, 6, 5)
 
-    agent = Agent(input_dims=env.observation_space.shape, env=env, n_actions=env.action_space.shape[0])
-    n_games = 126
+    agent = Agent(input_dims=env.observation_space.shape, env=env, n_actions=env.action_space.shape[0], gamma=0.99,alpha = 0.003,beta = 0.003, max_size=1000000, tau=0.001,
+                   batch_size=512, reward_scale=5)
+    n_games = 15000
 
     filename = 'plot_reward.png'
 
@@ -60,7 +62,7 @@ if __name__ == '__main__':
         # env.render(mode='human')
 
     for i in range(n_games):
-        observation, index = env.reset(data_set)
+        observation, index = env.reset(data_set.iloc[:-97])
         done = False
         score = 0
         while not done:

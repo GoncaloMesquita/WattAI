@@ -7,7 +7,7 @@ from networks import ActorNetwork, CriticNetwork, ValueNetwork
 
 class Agent():
     def __init__(self, alpha=0.0003, beta=0.0003, input_dims=[8],
-            env=None, gamma=0.99, n_actions=2, max_size=1000000, tau=0.005,
+            env=None, gamma=0.99, n_actions=2, max_size=1000000, tau=0.001,
             layer1_size=256, layer2_size=256, batch_size=256, reward_scale=2):
         self.gamma = gamma
         self.tau = tau
@@ -16,7 +16,7 @@ class Agent():
         self.n_actions = n_actions
 
         self.actor = ActorNetwork(alpha, input_dims, n_actions=n_actions,
-                    name='actor', max_action=env.action_space.high)
+                    name='actor', max_action=env.action_space.high, min_action= env.action_space.low)
         self.critic_1 = CriticNetwork(beta, input_dims, n_actions=n_actions,
                     name='critic_1')
         self.critic_2 = CriticNetwork(beta, input_dims, n_actions=n_actions,
@@ -25,6 +25,7 @@ class Agent():
         self.target_value = ValueNetwork(beta, input_dims, name='target_value')
 
         self.scale = reward_scale
+        # self.update_network_parameters()
         self.update_network_parameters(tau=1)
 
     def choose_action(self, observation):
@@ -92,10 +93,14 @@ class Agent():
         critic_value = T.min(q1_new_policy, q2_new_policy)
         critic_value = critic_value.view(-1)
 
+        
+
         self.value.optimizer.zero_grad()
         value_target = critic_value - log_probs
         value_loss = 0.5 * F.mse_loss(value, value_target)
+        
         value_loss.backward(retain_graph=True)
+        T.nn.utils.clip_grad_norm_(self.value.parameters(), 0.5)
         self.value.optimizer.step()
 
         actions, log_probs = self.actor.sample_normal(state, reparameterize=True)
@@ -109,6 +114,8 @@ class Agent():
         actor_loss = T.mean(actor_loss)
         self.actor.optimizer.zero_grad()
         actor_loss.backward(retain_graph=True)
+
+        T.nn.utils.clip_grad_norm_(self.actor.parameters(), 0.5)
         self.actor.optimizer.step()
 
         self.critic_1.optimizer.zero_grad()
@@ -121,7 +128,17 @@ class Agent():
 
         critic_loss = critic_1_loss + critic_2_loss
         critic_loss.backward()
+
+        T.nn.utils.clip_grad_norm_(self.critic_1.parameters(), 0.5)
+        T.nn.utils.clip_grad_norm_(self.critic_2.parameters(), 0.5)
+
+        
         self.critic_1.optimizer.step()
         self.critic_2.optimizer.step()
 
         self.update_network_parameters()
+
+def print_gradients(model):
+    for name, parameter in model.named_parameters():
+        print(name, parameter)
+        print(name, parameter.grad)

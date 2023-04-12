@@ -158,7 +158,7 @@ class FeatureDataset(Dataset):
     def __getitem__(self, idx):
         return self.X[idx], self.y[idx]
  
-class MLP(nn.Module):
+class MLP_comfort(nn.Module):
     
     def __init__(self, n_features, n_outputs, layers,
             activation_type, dropout, **kwargs):
@@ -505,7 +505,8 @@ def plot_r2_curves(results, output_dir):
 def main(args):
     
     # Check device
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # device = "cpu"
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
     print(f"Device: {device}")
     
     # Set random seeds
@@ -541,18 +542,14 @@ def main(args):
     # Create the dataloaders
     train_dataloader = torch.utils.data.DataLoader(train_dataset, 
                                                    batch_size=args.batch_size, 
-                                                   shuffle=True,
-                                                   num_workers=NUM_WORKERS,     
-                                                   pin_memory=True)
+                                                   shuffle=True)
     
     test_dataset = torch.utils.data.DataLoader(test_dataset, 
                                                batch_size=args.batch_size, 
-                                               shuffle=False, 
-                                               num_workers=NUM_WORKERS, 
-                                               pin_memory=True)
+                                               shuffle=False)
     
     # Define the model  
-    model = MLP(args.input_size, args.output_size, args.hidden_layers, 
+    model = MLP_comfort(args.input_size, args.output_size, args.hidden_layers, 
                 args.activation, args.dropout).to(device)
     
     print("----------- Model Architecture -----------")
