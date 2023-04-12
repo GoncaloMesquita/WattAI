@@ -47,19 +47,27 @@ if __name__ == '__main__':
 
     agent = Agent(input_dims=env.observation_space.shape, env=env, n_actions=env.action_space.shape[0], gamma=0.99,alpha = 0.003,beta = 0.003, max_size=1000000, tau=0.001,
                    batch_size=512, reward_scale=5)
-    n_games = 15000
+    n_games = 1000
 
     filename = 'plot_reward.png'
 
     figure_file = 'Plots/' + filename
 
-    best_score = env.reward_range[0]
+    # best_score = env.reward_range[0]
+    # extract the best score from the file best_score.txt
+    with open('RL_agent/best_score.txt', 'r') as f:
+        best_score = float(f.read())
+
+
+
     score_history = []
     load_checkpoint = False
 
-    if load_checkpoint:
-        agent.load_models()
+    # if load_checkpoint:
+    #     agent.load_models()
         # env.render(mode='human')
+    agent.load_models()
+
 
     for i in range(n_games):
         observation, index = env.reset(data_set.iloc[:-97])
@@ -71,8 +79,8 @@ if __name__ == '__main__':
             observation_, reward, done, info = env.step(action, observation, models_dict, scalers_dict, data_set.iloc[index, 1])
             score += reward
             agent.remember(observation, action, reward, observation_, done)
-            if not load_checkpoint:
-                agent.learn()
+            # if not load_checkpoint:
+            agent.learn()
             observation = observation_
         score_history.append(score)
         avg_score = np.mean(score_history[-100:])
@@ -81,6 +89,8 @@ if __name__ == '__main__':
             best_score = avg_score
             if not load_checkpoint:
                 agent.save_models()
+                with open('RL_agent/best_score.txt', 'w') as f:
+                    f.write(str(score))
 
         print('episode ', i, 'score %.1f' % score, 'avg_score %.1f' % avg_score)
 
