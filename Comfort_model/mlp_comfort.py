@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import r2_score
+from sklearn.metrics import r2_score, mean_squared_error 
 
 import pickle
 
@@ -86,13 +86,16 @@ def get_args_parser():
 def Predict_Comfort(input_file):
     
     df = pd.read_csv(input_file)
-    pmv, ppd = cp.pmv_ppd_predictor(np.array(df['indoor_temp_interior'].values), 
-                                    np.array(df['co2'].values))
+    """ pmv, ppd = cp.pmv_ppd_predictor(np.array(df['indoor_temp_interior'].values), 
+                                    np.array(df['co2'].values)) """
+                                    
+    pmv, ppd = cp.pmv_ppd_predictor(np.array(df['indoor_temp_interior'].values), None)
     
     df['pmv'] = pmv
     df['ppd'] = ppd
     
-    df = df[['co2', 'indoor_temp_interior', 'pmv', 'ppd']]
+    #df = df[['co2', 'indoor_temp_interior', 'pmv', 'ppd']]
+    df = df[['indoor_temp_interior', 'pmv', 'ppd']]
         
     return df
 
@@ -502,6 +505,29 @@ def plot_r2_curves(results, output_dir):
     plt.legend()
     plt.savefig(os.path.join(output_dir, "r2.png"))
     
+def evaluate(model, test_loader, device):
+    model.eval()
+
+    true_values = []
+    predicted_values = []
+
+    with torch.no_grad():
+        for inputs, targets in test_loader:
+            # Send data to target device
+            X, y = inputs.to(device), targets.to(device)
+            outputs = model(X)
+            predicted_values.extend(outputs.cpu().numpy())
+            true_values.extend(targets.cpu().numpy())
+
+    # Compute and print evaluation metrics
+    mse = mean_squared_error(true_values, predicted_values)
+    r2 = r2_score(true_values, predicted_values)
+
+    print("Mean Squared Error:", mse)
+    print("R2 Score:", r2)    
+    
+    return
+    
 def main(args):
     
     # Check device
@@ -577,6 +603,8 @@ def main(args):
     # Plot the loss curves
     plot_loss_curves(results, args.output_dir)
     plot_r2_curves(results, args.output_dir)
+    
+    evaluate(model, test_dataset, device=device)
 
     return
 
