@@ -1,5 +1,6 @@
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
+import pickle
 
 
 ######### main #########
@@ -24,13 +25,16 @@ print(df.describe())
 
 # Apply feature scaling to the train and test datasets separately
 
-df_building = Predict_Comfort(args.validation_file)
-df_synthetic = Predict_Comfort(args.train_file)
-df_test = Predict_Comfort(args.test_file)
-    
-# Concatenate the two dataframes
+df_building = pd.read_csv('dataset_building.csv')
+df_synthetic = pd.read_csv('Synthetic_data/clean_synthetic_data.csv')
+
 df_train = pd.concat([df_synthetic, df_building], axis=0)
 
+train = df_train.values
+
 sc = StandardScaler()
-x_train = sc.fit_transform(x_train)
-x_test = sc.transform(x_test)
+train = sc.fit_transform(train)
+
+print(sc)
+
+pickle.dump(sc, open('Scalers/train_data_scalers.pkl','wb'))
