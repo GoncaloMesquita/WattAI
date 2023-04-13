@@ -17,7 +17,7 @@ class MLPEnvironment(gym.Env):
         # Adjust the action_space shape to handle multiple continuous actions
         self.action_space = spaces.Box(low=np.array([20.14,9.40,0,0,0]), high=np.array([29.35,24,100,100,100]), shape=(action_dim,), dtype=np.float64) # Falta definir as bounds
 
-        self.day = 96/2
+        self.day = 96
 
     def step(self, action, state, models_dict, scalers_dict,next_outdoor_temp):
         # Implement your step function using the custom MLP function
@@ -39,7 +39,7 @@ class MLPEnvironment(gym.Env):
 
         # Implement reset function to return the initial state of the environment
         initial_state = data_set.iloc[index,[1,4,5,8,9,10]].values
-        self.day = 96/2
+        self.day = 96
         
         
         return initial_state, index
