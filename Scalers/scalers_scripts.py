@@ -28,13 +28,13 @@ print(df.describe())
 df_building = pd.read_csv('dataset_building.csv')
 df_synthetic = pd.read_csv('Synthetic_data/clean_synthetic_data.csv')
 
-df = df_building[['zone_temp_cooling', 
+df_building = df_building[['zone_temp_cooling', 
                     'zone_temp_heating', 
                     'supplyfan_speed',
                     'returnfan_speed',
                     'outdoor_air_damper_position',
                     ]]
-df = df_synthetic[['zone_temp_cooling', 
+df_synthetic = df_synthetic[['zone_temp_cooling', 
                     'zone_temp_heating', 
                     'supplyfan_speed',
                     'returnfan_speed',
