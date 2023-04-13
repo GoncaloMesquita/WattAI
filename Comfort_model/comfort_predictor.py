@@ -221,7 +221,39 @@ def pmv_ppd_predictor(indoor_temp, co2) -> Dict[str, list]:
     # Compute the mse between the original and the noisy values
     return results['pmv'], results['ppd']
 
+def pmv_ppd_predictor_only_temp(indoor_temp) -> Dict[str, list]:
+
+    activity = ['Typing',
+                'Filing, seated',
+                ]
+    garments = ['Standard office chair',
+                'Double-breasted coat (thin)',
+                'Boots',
+                'Thick trousers',
+                'T-shirt',
+                ]
+
+    ### Define the variables
+    tdb = tr = indoor_temp  
+    met = sum([met_typical_tasks[act] for act in activity])
+    icl = sum([clo_individual_garments[garm] for garm in garments])
+    v = 0.3  # average air speed in m/s -> THIS NEEDS TO BE ADJUSTED TO THE RIGHT VALUE
+    rh = 50   # relative humidity in % ---> THIS NEEDS TO BE ADJUSTED TO THE RIGHT VALUE
+    vr = v_relative(v=v, met=met)
+    clo = clo_dynamic(clo=icl, met=met)
+        
+    ### Predict the PMV and PPD values
+    results = pmv_ppd(tdb=tdb, tr=tr, vr=vr, rh=rh, met=met, clo=clo, standard='ASHRAE', units='SI') # See difference between ASHRAE and ISO !!
+    
+    return results['pmv'], results['ppd']
+
 def main(args):
+    
+    pmv, ppd = pmv_ppd_predictor(14.5, None)
+    
+    print(pmv, ppd)
+    exit()
+    
 
     ### Load the dataset
     file_name, file_extension = os.path.splitext(args.input_file)
