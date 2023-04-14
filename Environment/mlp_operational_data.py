@@ -180,6 +180,7 @@ if __name__ == '__main__':
     df_ns = pd.concat([df, x_ns ], axis=1, ignore_index=False)
     df_ns.to_csv('Environment/data_set_environment.csv', index=False)
 
+<<<<<<< HEAD
     x_action = df.loc[:,['zone_temp_cooling', 'zone_temp_heating', 'supplyfan_speed', 'returnfan_speed', 'outdoor_air_damper_position', 'Outdoor_temp']]
     x_action_state = pd.concat([x_action, x_ns], axis=1)   
 
@@ -190,6 +191,11 @@ if __name__ == '__main__':
 
     x_train, x_test, Y_train, Y_test = train_test_split(x_action_state , df.loc[:,['indoor_temp_interior', 'co2','supply_air_temp', 'return_air_temp', 'filtered_air_flow_rate']], test_size=0.15, random_state=42)
 
+=======
+    x_train, x_test, Y_train, Y_test = train_test_split(x_action_state , df.loc[:,['indoor_temp_interior', 'co2','supply_air_temp', 'return_air_temp', 'filtered_air_flow_rate']], test_size=0.15, random_state=42)
+
+
+>>>>>>> 2477b9ff86814a0bc9eb7d5a10ff2fa80fe140f0
     Training = pd.concat([x_train, Y_train ], axis=1, ignore_index=False)
     Training.to_csv('Environment/training_environment.csv', index=False)
 
@@ -200,7 +206,11 @@ if __name__ == '__main__':
 
     # #######################################  Enviorment MODEL   ######################################
 
+<<<<<<< HEAD
     # y_ns_pred, model_next_state = run_model_enviorment(X_norm_train,Y_train.loc[:,['indoor_temp_interior', 'co2']], X_norm_test, Y_test.loc[:,['indoor_temp_interior', 'co2']], 2)
+=======
+    y_ns_pred, model_next_state = run_model_enviorment(X_norm_train,Y_train.loc[:,['indoor_temp_interior', 'co2']], X_norm_test, Y_test.loc[:,['indoor_temp_interior', 'co2']], 2)
+>>>>>>> 2477b9ff86814a0bc9eb7d5a10ff2fa80fe140f0
 
 
     # #######################################  Air Temp MODEL   #############################################
@@ -211,8 +221,11 @@ if __name__ == '__main__':
 
     # y_operational_data_pred, model_air_flowrate  = run_model_air_flowrate(X_norm_train , Y_train.loc[:,['filtered_air_flow_rate']], X_norm_test, Y_test.loc[:,['filtered_air_flow_rate']], 1 )
 
+<<<<<<< HEAD
 
     # # Save the models 
+=======
+>>>>>>> 2477b9ff86814a0bc9eb7d5a10ff2fa80fe140f0
 
     # # Save the models 
 
@@ -220,10 +233,15 @@ if __name__ == '__main__':
     # torch.save(model_air_temp_suplly_return, 'Environment/model_air_temp_suplly_return.pt')
     # torch.save(model_air_flowrate, 'Environment/model_air_flowrate.pt')
 
+<<<<<<< HEAD
 df_building= pd.read_csv('dataset_building.csv')
+=======
+    df_databuilding = pd.read_csv('dataset_building.csv')
+>>>>>>> 2477b9ff86814a0bc9eb7d5a10ff2fa80fe140f0
 
-syntetich = pd.read_csv( 'Synthetic_data/synthetic_data.csv' )
+    syntetich = pd.read_csv( 'Synthetic_data/synthetic_data.csv' )
 
+<<<<<<< HEAD
 # df_concat = pd.concat([df_databuilding, syntetich ], axis=0)
 
 
@@ -246,6 +264,9 @@ max_thermal_comfort = 0.199
 # Reward calculation
 for i in range (len(thermal_comfort)):
     reward.append(-.5*(df_building.iloc[:,0]) /130 + .35*thermal_comfort[i]/max_thermal_comfort + .15*CO2_comfort[i])
+=======
+    df_concat = pd.concat([df_databuilding, syntetich ], axis=0)
+>>>>>>> 2477b9ff86814a0bc9eb7d5a10ff2fa80fe140f0
 
 print(thermal_comfort[i])
 fig = plt.figure()
@@ -258,4 +279,8 @@ ax.set_title('3D Scatter Plot')
 # plt.scatter(reward,.35*thermal_comfort/max_thermal_comfort + .15*CO2_comfort)
 # plt.scatter(reward,-.5*(df_building.iloc[:,0]) /130 )
 
+<<<<<<< HEAD
 plt.show()
+=======
+    print(df_concat['co2'].describe())
+>>>>>>> 2477b9ff86814a0bc9eb7d5a10ff2fa80fe140f0
