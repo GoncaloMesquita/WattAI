@@ -70,10 +70,11 @@ if __name__ == '__main__':
         score = 0
         while not done:
             index += 1
-            action = agent.choose_action(observation)
-            observation_, reward, done, info = env.step(action, observation, models_dict, scalers_dict, data_set.iloc[index, 1])
+            # action = agent.choose_action(observation)
+            action = agent.choose_action(scalers_dict['state_scalers'].transform(np.array([observation])))
+            observation_, reward, done, info = env.step(action[0], observation, models_dict, scalers_dict, data_set.iloc[index, 1])
             score += reward
-            action = scalers_dict['actions_scalers'].transform(np.array([action]))
+            action = scalers_dict['actions_scalers'].transform(action)
             
             agent.remember(scalers_dict['state_scalers'].transform(np.array([observation])), action, reward, scalers_dict['state_scalers'].transform(np.array([observation_])), done)
             # if not load_checkpoint:

@@ -35,8 +35,8 @@ def Environment(action, state, models_dict, scalers_dict, next_outdoor_temp):
     energy = models_dict['energy_model_augmented_data'].predict(scaled_features, verbose=0)
     
     # Comfort prediction
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    # with warnings.catch_warnings():
+    #     warnings.simplefilter("ignore")
         # comfort_input = scalers_dict['mlp_comfort_scaler'].transform(np.array([next_state[0,1:3]]))
         # comfort_input = scalers_dict['mlp_comfort_scaler_only_temp'].transform(np.array([[next_state[0,1]]]))
     # comfort = models_dict['mlp_comfort_only_temp'](torch.tensor(comfort_input).float().to(device)).cpu().detach().numpy()
@@ -46,12 +46,14 @@ def Environment(action, state, models_dict, scalers_dict, next_outdoor_temp):
     CO2_comfort = -1/(1+np.exp(-0.2*(next_state[0,2]-700)))+1
 
     max_thermal_comfort = 0.199
+    if energy[0,0]<0:
+        energy[0,0] = -energy[0,0].copy()
     # Reward calculation
     reward = -.5*energy[0,0]/130 + .35*thermal_comfort/max_thermal_comfort + .15*CO2_comfort
     # reward = -.35*energy[0,0]/130 + .15*(1-abs(comfort[0,0])/3) + .5*(1-comfort[0,1]/100)
     
     # reward = -.5*energy[0,0] + .25*(1-abs(comfort[0,0])/3) + .25*(1-comfort[0,1]/100)
 
+    final_reward = 1/torch.clamp(torch.tensor(abs(reward-0.5)), min=0.00000001, max=abs(reward.copy()))
 
-
-    return next_state[0], reward
+    return next_state[0], final_reward
