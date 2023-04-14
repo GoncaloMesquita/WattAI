@@ -1,118 +1,158 @@
-# import pygame
-
-# pygame.init()
-
-# # Set up the window
-# screen_width, screen_height = 800, 600
-# screen = pygame.display.set_mode((screen_width, screen_height))
-# pygame.display.set_caption("House Environment")
-
-# # Set up the house
-# house_width, house_height = 300, 300
-# house_color = (0, 0, 255)
-# house_rect = pygame.Rect(screen_width/2 - house_width/2, screen_height/2 - house_height/2, house_width, house_height)
-
-# # Set up the temperature
-# initial_temperature = 20.0  # in Celsius
-# temperature_change_per_second = 1.0  # in Celsius
-# current_temperature = initial_temperature
-
-# # Set up the clock
-# clock = pygame.time.Clock()
-
-# # Start the game loop
-# running = True
-# while running:
-#     # Handle events
-#     for event in pygame.event.get():
-#         if event.type == pygame.QUIT:
-#             running = False
-
-#     # Update the temperature
-#     current_temperature += temperature_change_per_second * clock.get_time() / 1000.0
-
-#     # Update the house color based on the temperature
-#     temperature_color = (0, 0, 0)
-#     if current_temperature > initial_temperature:
-#         # If the temperature is hotter than the initial temperature, make the house more red
-#         temperature_color = (min(255, int((current_temperature - initial_temperature) * 10)), 0, 0)
-#     elif current_temperature < initial_temperature:
-#         # If the temperature is colder than the initial temperature, make the house more blue
-#         temperature_color = (0, 0, min(255, int((initial_temperature - current_temperature) * 10)))
-#     house_color = temperature_color
-
-#     # Clear the screen
-#     screen.fill((255, 255, 255))
-
-#     # Draw the house
-#     pygame.draw.rect(screen, house_color, house_rect)
-
-#     # Update the screen
-#     pygame.display.flip()
-
-#     # Wait for the next frame
-#     clock.tick(60)
-
-# # Clean up
-# pygame.quit()
-
 
 import pygame
+import random
+import math
+import numpy as np
+
 
 pygame.init()
 
 # Set up the window
-size = (1800, 1200)
+size = (1600, 1000)
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Simulation")
-
-# Load the background image
-background = pygame.image.load("Visualization/plant.png")
-background = pygame.transform.scale(background, (size))
-
-# Load the fan image
-fan_image1 = pygame.image.load('Visualization/fan.png')
-fan_image1 = pygame.transform.scale(fan_image1, (70,70))
-
-fan_image2 = pygame.image.load('Visualization/fan.png')
-fan_image2 = pygame.transform.scale(fan_image2, (70,70))
-
-# Set up the fan position and speed
-fan_pos1 = [600, 700]
-fan_pos2 = [800 , 900]
-fan_speed = 5
-
-# Set up the clock
 clock = pygame.time.Clock()
 
-# Main loop
+# VARIABLES
+
+indoor_temperature = 20.0
+outdoor_temperature = 10.0
+co2 = 400.0
+
+# Load the background image
+background = pygame.image.load("Visualization/background_officie.png")
+background = pygame.transform.scale(background, (size))
+
+#heating scale
+hot_color = (255, 0, 0)    # red
+medium_color = (255, 255, 0)    # yellow
+cool_color = (0, 255, 255)    # light blue
+
+
+# FAN
+
+fan_image1 = pygame.image.load('Visualization/fan.png')
+fan_image1 = pygame.transform.scale(fan_image1, (70, 70))
+fan_speed = [20 ,0 , 5 , 10 , 0 ,4 ]
+fan_speed1 = fan_speed[0]
+fan_positions = [[849, 631], [390, 240], [240, 700], [890, 280]]
+
+# PEOPLE
+
+start_pos = [ [1100, 830], [1030,187], [900,660], [380,640], [380,700],[305,187],[305,295],[490,295], [886,697],[828,697],[600,500],[1225,328], [500, 730],[200,450]]
+end_pos = [[1030,368],[1030,187], [920,660], [380,640], [380,700],[305,187],[305,295],[490,295], [886,697],[828,697],[787,600],[1225,328],  [787,660],[730,368]]
+num_people=14
+point_pos = start_pos
+
+# HEATING
+
+square_width = 80
+square_height = 20
+square_positions = [[386, 360], [860, 100], [210, 880], [830, 490]]
+square_rects = [pygame.Rect(pos[0], pos[1], square_width, square_height) for pos in square_positions]
+initial_temperature = 20.0  # in Celsius
+temperature_change_per_second = 2 # in Celsius
+current_temperature = initial_temperature
+state_temperature = [30 ,14 , 18 , 18 , 22 ,30]
+
+# Set up the clock
+count1 = 0
+count2=0
+next_state = 0
+timer2 = 120
+count3=0
+count4=0
+
 while True:
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             quit()
 
-    # Update the fan speed based on the simulation time
-    fan_speed = pygame.time.get_ticks() / 1000.0
-
-    # Clear the screen
-    # screen.fill((255, 255, 255))
-
     screen.blit(background, (0, 0))
 
-    # Draw the fan
+    count4 = count4 + 1
+    print(count4)
+    if count4 == timer2:
+        indoor_temperature = indoor_temperature + temperature_change_per_second
+        outdoor_temperature = outdoor_temperature + temperature_change_per_second
+        co2 = co2 + 10.0
+        count4 = 0
+    # Draw the square
+    pygame.draw.rect(screen, (255, 255, 255), (20, 20, 200, 80), 2)
+
+    # Display the values of the variables
+    font = pygame.font.Font(None, 24)
+    text_surface = font.render('Indoor Temperature: {:.1f} C'.format(indoor_temperature), True, (0, 0, 0))
+    screen.blit(text_surface, (30, 30))
+    text_surface = font.render('Outdoor Temperature: {:.1f} C'.format(outdoor_temperature), True, (0, 0, 0))
+    screen.blit(text_surface, (30, 50))
+    text_surface = font.render('CO2: {:.1f} ppm'.format(co2), True, (0, 0, 0))
+    screen.blit(text_surface, (30, 70))
+
+
+    for i in range(num_people):
+        if point_pos[i]!= end_pos[i]:
+        # Check if the point needs to move in the x-axis or y-axis
+            if point_pos[i][0] != end_pos[i][0]:
+                x_direction = 1 if end_pos[i][0] > point_pos[i][0] else -1
+                point_pos[i] = (point_pos[i][0] + x_direction, point_pos[i][1])
+            else:
+                y_direction = 1 if end_pos[i][1] > point_pos[i][1] else -1
+                point_pos[i] = (point_pos[i][0], point_pos[i][1] + y_direction)
+
+        # Check if the point has reached the end position
+
+        if abs(point_pos[i][0] - end_pos[i][0]) + abs(point_pos[i][1] - end_pos[i][1]) <= 10:
+            point_pos[i] = end_pos[i]
+            
+        pygame.draw.circle(screen, (255, 150, 0), point_pos[i], 10)
+
+     # Draw the fan
+
+    count3 = count3 +1 
+    if count3 == timer2:
+        
+        next_state = next_state + 1
+        fan_speed1 = fan_speed[next_state]
+        count3=0
+
+    fan_speed2 = pygame.time.get_ticks()*fan_speed1/ 1000.0
+
+    for i in range(len(fan_positions)):
+        
+        fan_rotated = pygame.transform.rotate(fan_image1, fan_speed2 * 50)
+        fan_rect = fan_rotated.get_rect(center=fan_positions[i])
+        screen.blit(fan_rotated, fan_rect)
+
+    count2 = count2 + 1
+    if count2 == timer2:
     
-    fan_rotated = pygame.transform.rotate(fan_image1, fan_speed * 100)
-    fan_rect = fan_rotated.get_rect(center=fan_pos1)
-    screen.blit(fan_rotated, fan_rect)
+        current_temperature = state_temperature[next_state] 
+        count2=0
+   
+    # Draw the heating squares
 
-    fan_rotated = pygame.transform.rotate(fan_image1, fan_speed * 100)
-    fan_rect = fan_rotated.get_rect(center=fan_pos1)
-    screen.blit(fan_rotated, fan_rect)
+    for i in range(len(square_rects)):
+        # Update the color based on the temperature
+        temperature_color = (0, 0, 0)
+        if current_temperature >= 25:
+            temperature_color = (255, 51, 51)
+        elif current_temperature >= 22:
+            temperature_color = (139, 0, 0)
+        elif current_temperature <= 14:
+            temperature_color = (0,90, 230) 
+        elif current_temperature <= 18:
+            temperature_color = (0, 0, 230)
 
+        pygame.draw.rect(screen, temperature_color, square_rects[i])
 
+    
     # Update the screen
     pygame.display.update()
 
     # Limit the frame rate
     clock.tick(60)
+
+
