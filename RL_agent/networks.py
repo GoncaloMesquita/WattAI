@@ -117,7 +117,9 @@ class ActorNetwork(nn.Module):
         mu = self.mu(prob)
         sigma = self.sigma(prob)
 
-        sigma = T.clamp(sigma, min=self.reparam_noise, max=1)
+        sigma = T.clamp(sigma, min=T.tensor([self.reparam_noise,self.reparam_noise,self.reparam_noise,self.reparam_noise,self.reparam_noise
+                                             ]).to(self.device), max=T.tensor([2, 2, 30, 30, 44]).to(self.device))
+        # sigma = T.clamp(sigma, min=self.reparam_noise, max=30)
 
         return mu, sigma
 

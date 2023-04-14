@@ -18,18 +18,13 @@ from Gym_Environment import MLPEnvironment
 from mlp_operational_data import MLP
 from mlp_comfort import MLP_comfort
 
-# test_data = pd.read_csv('Hold_out_data.csv')
-# X_test = test_data.iloc[:, range(1,12)]
-# y_test = test_data.iloc[:, 0]
-# test_data = pd.read_csv('Environment/testing_environment.csv')
-# X_test = test_data.iloc[:, range(11)]
-# y_test = test_data.iloc[:, 15]
+
 data_set = pd.read_csv('dataset_building.csv')
 
 if __name__ == '__main__':
     # load all models and scalers
-    models = ['Energy_model/energy_model_augmented_data.h5','Environment/model_next_state.pt','Environment/model_air_temp_suplly_return.pt','Environment/model_air_flowrate.pt', 'Comfort_model/best_mlp_comfort.pt' ]
-    scalers = ['Energy_model/augmented_data_scaler.pkl', 'Environment/scaler_environment.pkl', 'Comfort_model/mlp_comfort_scaler.pkl']
+    models = ['Energy_model/energy_model_augmented_data.h5','Environment/model_next_state.pt','Environment/model_air_temp_suplly_return.pt','Environment/model_air_flowrate.pt', 'Comfort_model/mlp_comfort_only_temp.pt' ]
+    scalers = ['Energy_model/augmented_data_scaler.pkl', 'Environment/scaler_environment.pkl', 'Comfort_model/mlp_comfort_scaler_only_temp.pkl', 'Scalers/state_scalers.pkl', 'Scalers/actions_scalers.pkl']
     models_dict = dict()
     scalers_dict = dict()
     for mod in models:
@@ -53,10 +48,10 @@ if __name__ == '__main__':
 
     figure_file = 'Plots/' + filename
 
-    # # # # best_score = env.reward_range[0]
+    best_score = env.reward_range[0]
     # extract the best score from the file best_score.txt
-    with open('RL_agent/best_score.txt', 'r') as f:
-        best_score = float(f.read())
+    # with open('RL_agent/best_score.txt', 'r') as f:
+    #     best_score = float(f.read())
 
 
 
@@ -66,7 +61,7 @@ if __name__ == '__main__':
     # if load_checkpoint:
     #     agent.load_models()
         # env.render(mode='human')
-    agent.load_models()
+    # agent.load_models()
 
 
     for i in range(n_games):
@@ -78,7 +73,9 @@ if __name__ == '__main__':
             action = agent.choose_action(observation)
             observation_, reward, done, info = env.step(action, observation, models_dict, scalers_dict, data_set.iloc[index, 1])
             score += reward
-            agent.remember(observation, action, reward, observation_, done)
+            action = scalers_dict['actions_scalers'].transform(np.array([action]))
+            
+            agent.remember(scalers_dict['state_scalers'].transform(np.array([observation])), action, reward, scalers_dict['state_scalers'].transform(np.array([observation_])), done)
             # if not load_checkpoint:
             agent.learn()
             observation = observation_
