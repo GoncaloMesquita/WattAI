@@ -45,7 +45,6 @@ def get_args_parser():
       
     return parser
 
-
 def predict_pmv_ppd(df, args = None) -> Dict[str, list]:
     """ Predicts the PMV and PPD values for a given dataset.
     
@@ -204,7 +203,7 @@ def pmv_ppd_predictor(indoor_temp, co2) -> Dict[str, list]:
     results = pmv_ppd(tdb=tdb, tr=tr, vr=vr, rh=rh, met=met, clo=clo, standard='ASHRAE', units='SI') # See difference between ASHRAE and ISO !!
     
     
-    ### Take into account CO2 levels (ppm)
+    """ ### Take into account CO2 levels (ppm)
     ## Average of CO2 levels in a room: 400 ppm - 1000 ppm 
     results_aux = results.copy()
     
@@ -217,12 +216,44 @@ def pmv_ppd_predictor(indoor_temp, co2) -> Dict[str, list]:
     
     #print(f"Average PMV noise: {np.mean(pmv_noise)} | Average PPD noise: {np.mean(ppd_noise)}") 
     results['pmv'] = results['pmv'] + pmv_noise
-    results['ppd'] = results['ppd'] + ppd_noise
+    results['ppd'] = results['ppd'] + ppd_noise """
     
     # Compute the mse between the original and the noisy values
     return results['pmv'], results['ppd']
 
+def pmv_ppd_predictor_only_temp(indoor_temp) -> Dict[str, list]:
+
+    activity = ['Typing',
+                'Filing, seated',
+                ]
+    garments = ['Standard office chair',
+                'Double-breasted coat (thin)',
+                'Boots',
+                'Thick trousers',
+                'T-shirt',
+                ]
+
+    ### Define the variables
+    tdb = tr = indoor_temp  
+    met = sum([met_typical_tasks[act] for act in activity])
+    icl = sum([clo_individual_garments[garm] for garm in garments])
+    v = 0.3  # average air speed in m/s -> THIS NEEDS TO BE ADJUSTED TO THE RIGHT VALUE
+    rh = 50   # relative humidity in % ---> THIS NEEDS TO BE ADJUSTED TO THE RIGHT VALUE
+    vr = v_relative(v=v, met=met)
+    clo = clo_dynamic(clo=icl, met=met)
+        
+    ### Predict the PMV and PPD values
+    results = pmv_ppd(tdb=tdb, tr=tr, vr=vr, rh=rh, met=met, clo=clo, standard='ASHRAE', units='SI') # See difference between ASHRAE and ISO !!
+    
+    return results['pmv'], results['ppd']
+
 def main(args):
+    
+    pmv, ppd = pmv_ppd_predictor(14.5, None)
+    
+    print(pmv, ppd)
+    exit()
+    
 
     ### Load the dataset
     file_name, file_extension = os.path.splitext(args.input_file)
