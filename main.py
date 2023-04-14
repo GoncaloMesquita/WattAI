@@ -48,10 +48,10 @@ if __name__ == '__main__':
 
     figure_file = 'Plots/' + filename
 
-    best_score = env.reward_range[0]
+    # best_score = env.reward_range[0]
     # extract the best score from the file best_score.txt
-    # with open('RL_agent/best_score.txt', 'r') as f:
-    #     best_score = float(f.read())
+    with open('RL_agent/best_score.txt', 'r') as f:
+        best_score = float(f.read())
 
 
 
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     # if load_checkpoint:
     #     agent.load_models()
         # env.render(mode='human')
-    # agent.load_models()
+    agent.load_models()
 
 
     for i in range(n_games):
