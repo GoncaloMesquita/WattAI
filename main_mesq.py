@@ -11,9 +11,9 @@ sys.path.append('Synthetic_data')
 sys.path.append('Comfort_model')
 sys.path.append('Environment')
 sys.path.append('Energy_model')
-from sac_torch import Agent
+from sac_torch_mesq import Agent
 from utils import plot_learning_curve
-from Environment import Environment
+from Environment_mesq import Environment
 from Gym_Environment import MLPEnvironment
 from mlp_operational_data import MLP
 from mlp_comfort import MLP_comfort
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     for mod in models:
         model = mod.split('/')[-1].split('.')[0]
         if mod.split('/')[-1].split('.')[1] == 'pt':
-            models_dict[model] = torch.load(mod).eval()
+            models_dict[model] = torch.load(mod,map_location=torch.device('cpu')).eval()
         else:
             models_dict[model] = keras.models.load_model(mod)
     for sca in scalers:
@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
     # best_score = env.reward_range[0]
     # extract the best score from the file best_score.txt
-    with open('RL_agent/best_score.txt', 'r') as f:
+    with open('RL_agent/best_score_mesq.txt', 'r') as f:
         best_score = float(f.read())
 
 
@@ -87,7 +87,7 @@ if __name__ == '__main__':
             best_score = avg_score
             if not load_checkpoint:
                 agent.save_models()
-                with open('RL_agent/best_score.txt', 'w') as f:
+                with open('RL_agent/best_score_mesq.txt', 'w') as f:
                     f.write(str(best_score))
 
         print('episode ', i, 'score %.1f' % score, 'avg_score %.1f' % avg_score)
