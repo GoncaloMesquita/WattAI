@@ -4,12 +4,11 @@ import numpy as np
 import pandas as pd
 
 
-class MLPEnvironment(gym.Env):
-    def __init__(self, your_mlp_function, state_dim, action_dim, data_set):
-        super(MLPEnvironment, self).__init__()
+class Real_Environment(gym.Env):
+    def __init__(self, real_env, state_dim, action_dim, data_set):
+        super(Real_Environment, self).__init__()
 
-        # Set your custom MLP function here
-        self.your_mlp_function = your_mlp_function
+        self.real_env = real_env
 
         # Define action and observation space
         self.observation_space = spaces.Box(low=np.array([0,16,350,9,9,0]), high=np.array([42,30,1000,30,30,40000]), shape=(state_dim,), dtype=np.float64) # Falta definir as bounds, olhar para os max e min de cada coluna do dataset
@@ -20,9 +19,9 @@ class MLPEnvironment(gym.Env):
         self.day = 96
 
         self.data_set = data_set
-    def step(self, action, state, models_dict, scalers_dict,next_outdoor_temp):
-        # Implement your step function using the custom MLP function
-        next_state, reward = self.your_mlp_function(action, state, models_dict, scalers_dict,next_outdoor_temp)
+    def step(self, action, index):
+        # Implement your step function using the real environment
+        next_state, real_action, reward = self.real_env(action, self.data_set, index)
 
         self.day -= 1
         if self.day == 0:
@@ -31,12 +30,12 @@ class MLPEnvironment(gym.Env):
             done = False
 
         info = {}
-        return next_state, reward, done, info
+        return next_state, real_action, reward, done, info
 
     def reset(self):
         # np.random.seed(0)
         # choose random row from dataset and retrieve index of row
-        index = np.random.randint(0, self.data_set.shape[0])
+        index = np.random.randint(0, self.data_set.iloc[:-98].shape[0])
 
         # Implement reset function to return the initial state of the environment
         initial_state = self.data_set.iloc[index,[1,4,5,8,9,10]].values
