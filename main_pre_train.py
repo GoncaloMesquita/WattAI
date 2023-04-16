@@ -28,8 +28,8 @@ for sca in scalers:
 
 env = Real_Environment(Environment_real_data, 6, 5, data_set_environment)
 
-agent = Agent(input_dims=env.observation_space.shape, env=env, n_actions=env.action_space.shape[0], gamma=0.99,alpha = 0.003,beta = 0.003, max_size=256, tau=0.001,
-            batch_size=256, reward_scale=5, chkpt_dir='RL_pretraining/sac')
+agent = Agent(input_dims=env.observation_space.shape, env=env, n_actions=env.action_space.shape[0], gamma=0.99,alpha = 0.003,beta = 0.003, max_size=1024*2, tau=0.001,
+            batch_size=512, reward_scale=5, chkpt_dir='RL_pretraining/sac')
 n_games = 1000
 
 filename = 'actor_loss.png'
@@ -61,7 +61,7 @@ for i in range(n_games):
         observation_,real_action, reward, done, info = env.step(action[0], index)
         score += reward
         action = scalers_dict['actions_scalers'].transform(action)
-        real_action = scalers_dict['actions_scalers'].transform(real_action)
+        # real_action = scalers_dict['actions_scalers'].transform(real_action)
         agent.remember(scalers_dict['state_scalers'].transform(np.array([observation])), action,real_action, reward, scalers_dict['state_scalers'].transform(np.array([observation_])), done)
         # if not load_checkpoint:
         if agent.memory.mem_cntr > agent.batch_size:

@@ -140,7 +140,7 @@ if __name__ == '__main__':
     from env_pre_train import Environment_real_data
 
     env = Real_Environment(Environment_real_data, 6, 5, data_set_environment)
-    actor = ActorNetwork(alpha=0.002,fc1_dims=64 ,fc2_dims= 64, input_dims=env.observation_space.shape, n_actions=env.action_space.shape[0], max_action=env.action_space.high, min_action= env.action_space.low, chkpt_dir='RL_pretraining/actor_pre')
+    actor = ActorNetwork(alpha=0.0008,fc1_dims=64 ,fc2_dims= 64, input_dims=env.observation_space.shape, n_actions=env.action_space.shape[0], max_action=env.action_space.high, min_action= env.action_space.low, chkpt_dir='RL_pretraining/actor_pre')
     actor.load_checkpoint()
 
     scalers = ['Energy_model/augmented_data_scaler.pkl', 'Environment/scaler_environment.pkl', 'Scalers/state_scalers.pkl', 'Scalers/actions_scalers.pkl']

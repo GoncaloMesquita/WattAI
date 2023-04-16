@@ -18,7 +18,7 @@ from utils import plot_learning_curve
 
 
 if __name__ == '__main__':
-    flag = 1 # 0 for training agent on simulated data, 1 for training agent on real data
+    flag = 0 # 0 for training agent on simulated data, 1 for training agent on real data
 
     if flag == 0:
         from Environment import Environment
@@ -45,9 +45,9 @@ if __name__ == '__main__':
         
         env = MLPEnvironment(Environment, 6, 5, data_set.iloc[:-97])
 
-        agent = Agent(input_dims=env.observation_space.shape, env=env, n_actions=env.action_space.shape[0], gamma=0.99,alpha = 0.003,beta = 0.003, max_size=1024, tau=0.001,
-                    batch_size=256, reward_scale=6)
-        n_games = 2000
+        agent = Agent(input_dims=env.observation_space.shape, env=env, n_actions=env.action_space.shape[0], gamma=0.99,alpha = 0.003,beta = 0.003, max_size=1024*2, tau=0.001,
+                    batch_size=512, reward_scale=5)
+        n_games = 1000
 
         filename = 'plot_reward.png'
 
@@ -86,7 +86,7 @@ if __name__ == '__main__':
                 agent.learn()
                 observation = observation_
             score_history.append(score)
-            avg_score = np.mean(score_history[-100:])
+            avg_score = np.mean(score_history[-50:])
 
             if avg_score > best_score:
                 best_score = avg_score
@@ -120,8 +120,8 @@ if __name__ == '__main__':
 
         env = Real_Environment(Environment_real_data, 6, 5, data_set_environment)
 
-        agent = Agent(input_dims=env.observation_space.shape, env=env, n_actions=env.action_space.shape[0], gamma=0.99,alpha = 0.003,beta = 0.003, max_size=1024, tau=0.001,
-                    batch_size=256, reward_scale=5, chkpt_dir='RL_agent/sac_real_data')
+        agent = Agent(input_dims=env.observation_space.shape, env=env, n_actions=env.action_space.shape[0], gamma=0.99,alpha = 0.003,beta = 0.003, max_size=1024*2, tau=0.001,
+                    batch_size=512, reward_scale=5, chkpt_dir='RL_agent/sac_real_data')
         n_games = 7000
 
         filename = 'plot_reward.png'

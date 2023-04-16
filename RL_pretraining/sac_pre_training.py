@@ -109,8 +109,8 @@ class Agent():
         T.nn.utils.clip_grad_norm_(self.value.parameters(), 0.5)
         self.value.optimizer.step()
 
-        actions, log_probs = self.actor.sample_normal(state, reparameterize=True)
-        actions = scaler['actions_scalers'].transform(actions.cpu().detach().numpy())
+        actions_unscaled, log_probs = self.actor.sample_normal(state, reparameterize=True)
+        actions = scaler['actions_scalers'].transform(actions_unscaled.cpu().detach().numpy())
         actions = T.tensor(actions).to(self.actor.device)
         log_probs = log_probs.view(-1)
         q1_new_policy = self.critic_1.forward(state, actions)
@@ -122,7 +122,7 @@ class Agent():
         # real_actions.float()
         # actions.float()
 
-        actor_loss = F.mse_loss(actions.double(), real_actions.double()).float()
+        actor_loss = F.mse_loss(actions_unscaled.double(), real_actions.double()).float()
         ret = actor_loss.item()
         # actor_loss = T.mean(actor_loss)
         self.actor.optimizer.zero_grad()

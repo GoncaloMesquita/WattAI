@@ -8,7 +8,7 @@ import numpy as np
 
 class CriticNetwork(nn.Module):
     def __init__(self, beta, input_dims, n_actions, fc1_dims=256, fc2_dims=256,
-            name='critic', chkpt_dir='RL_agent/sac'):
+            name='critic', chkpt_dir='RL_pretraining/sac'):
         super(CriticNetwork, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
@@ -30,9 +30,9 @@ class CriticNetwork(nn.Module):
 
     def forward(self, state, action):
         action_value = self.fc1(T.cat([state, action.float()], dim=1))
-        action_value = F.relu(action_value)
+        action_value = F.leaky_relu(action_value)
         action_value = self.fc2(action_value)
-        action_value = F.relu(action_value)
+        action_value = F.leaky_relu(action_value)
 
         q = self.q(action_value)
 
@@ -46,7 +46,7 @@ class CriticNetwork(nn.Module):
 
 class ValueNetwork(nn.Module):
     def __init__(self, beta, input_dims, fc1_dims=256, fc2_dims=256,
-            name='value', chkpt_dir='RL_agent/sac'):
+            name='value', chkpt_dir='RL_pretraining/sac'):
         super(ValueNetwork, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
@@ -67,9 +67,9 @@ class ValueNetwork(nn.Module):
 
     def forward(self, state):
         state_value = self.fc1(state)
-        state_value = F.relu(state_value)
+        state_value = F.leaky_relu(state_value)
         state_value = self.fc2(state_value)
-        state_value = F.relu(state_value)
+        state_value = F.leaky_relu(state_value)
 
         v = self.v(state_value)
 
@@ -82,8 +82,8 @@ class ValueNetwork(nn.Module):
         self.load_state_dict(T.load(self.checkpoint_file))
 
 class ActorNetwork(nn.Module):
-    def __init__(self, alpha, input_dims, max_action, min_action, fc1_dims=256, 
-            fc2_dims=256, n_actions=2, name='actor', chkpt_dir='RL_agent/sac'):
+    def __init__(self, alpha, input_dims, max_action, min_action, fc1_dims=64, 
+            fc2_dims=64, n_actions=2, name='actor', chkpt_dir='RL_pretraining/sac'):
         super(ActorNetwork, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
@@ -110,9 +110,10 @@ class ActorNetwork(nn.Module):
 
     def forward(self, state):
         prob = self.fc1(state)
-        prob = F.relu(prob)
+        prob = F.leaky_relu(prob)
         prob = self.fc2(prob)
-        prob = F.relu(prob)
+        prob = F.leaky_relu(prob)
+        # prob = F.relu(prob)
         
         mu = self.mu(prob)
         sigma = self.sigma(prob)
@@ -125,6 +126,9 @@ class ActorNetwork(nn.Module):
 
     def sample_normal(self, state, reparameterize=True):
         mu, sigma = self.forward(state)
+        if np.isnan(mu[0,0].detach().cpu().numpy().all()):
+            mu = T.tensor([23, 18, 50, 50, 50]).to(self.device)
+            sigma = T.tensor([2, 2, 30, 30, 44]).to(self.device)
         probabilities = Normal(mu, sigma)
 
         if reparameterize:

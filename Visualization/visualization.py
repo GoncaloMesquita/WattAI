@@ -4,6 +4,8 @@ import random
 import math
 import numpy as np
 import matplotlib as plt
+import pandas as pd
+import time
 def thermal_bar(indoor_temperature, screen1):
 
 
@@ -78,15 +80,19 @@ def visualization(indoor_temperature, outdoor_temperature, co2, fan_speed, heati
     
     # Load the background image
     background = pygame.image.load("Visualization/background_officie.png")
+    # background = pygame.image.load("background_officie.png")
     background = pygame.transform.scale(background, (size))
 
     #Face
     smiley_image = pygame.image.load("Visualization/smileface.png")
+    # smiley_image = pygame.image.load("smileface.png")
     sad_face_image = pygame.image.load("Visualization/sadface.png")
+    # sad_face_image = pygame.image.load("sadface.png")
 
     # FAN
 
     fan_image1 = pygame.image.load('Visualization/fan.png')
+    # fan_image1 = pygame.image.load('fan.png')
     fan_image1 = pygame.transform.scale(fan_image1, (70, 70))
     fan_positions = [[849, 631], [390, 240], [240, 700], [890, 280]]
 
@@ -108,9 +114,12 @@ def visualization(indoor_temperature, outdoor_temperature, co2, fan_speed, heati
 
     count1 = 0
     next_state = 0
-    timer2 = 60
+    timer2 = 19
 
     while True:
+        # make timer for while loop
+
+        start_time = time.time()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -123,6 +132,10 @@ def visualization(indoor_temperature, outdoor_temperature, co2, fan_speed, heati
         if count1 == timer2:
             next_state = next_state + 1
             count1 = 0
+
+        if next_state == len(indoor_temperature):
+            pygame.quit()
+            quit()
         
         # draw_thermal_bar(indoor_temperature[next_state], screen)
         #thermal_bar(indoor_temperature[next_state], screen )
@@ -201,6 +214,7 @@ def visualization(indoor_temperature, outdoor_temperature, co2, fan_speed, heati
                 temperature_color = (139, 0, 0)
             pygame.draw.rect(screen, temperature_color, square_rects[i])
 
+        # print(time.time() - start_time)
         # plot_energy(our_energy, real_energy, next_state)
 
         # Update the screen1
@@ -216,16 +230,27 @@ def visualization(indoor_temperature, outdoor_temperature, co2, fan_speed, heati
 
 if __name__ == '__main__':
 
-    indoor_temperature = [15, 16, 17, 18 , 19 , 20 , 21, 21, 21, 21]
-    outdoor_temperature = [25, 26, 27, 28 , 29 , 20 , 22, 22, 23, 24]
-    co2 = [25, 26, 27, 28 , 29 , 20 , 22, 22, 23, 24] 
-    fan_speed = [2, 10 ,2 , 7 ,1 ,5, 7, 3 , 0, 2]
-    heating = [25, 25, 25,14, 14 ,14, 14, 14, 14]
-    cooling = [25, 25, 25,13, 13 ,13, 13, 13, 13]
-    thermal_comfort = [0.3, 0.3, 0.3 , 0.6 , 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6]
+    # indoor_temperature = [15, 16, 17, 18 , 19 , 20 , 21, 21, 21, 21]
+    # outdoor_temperature = [25, 26, 27, 28 , 29 , 20 , 22, 22, 23, 24]
+    # co2 = [25, 26, 27, 28 , 29 , 20 , 22, 22, 23, 24] 
+    # fan_speed = [2, 10 ,2 , 7 ,1 ,5, 7, 3 , 0, 2]
+    # heating = [25, 25, 25,14, 14 ,14, 14, 14, 14]
+    # cooling = [25, 25, 25,13, 13 ,13, 13, 13, 13]
+    # thermal_comfort = [0.3, 0.3, 0.3 , 0.6 , 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6]
+    data = pd.read_csv('dataset_building.csv')
+    data_points = list(data.iloc[250:270,[1,2,3,4,5,6]].values)
+    data_points = np.array(data_points)
+    indoor_temperature = data_points[:,3]
+    outdoor_temperature = data_points[:,0]
+    co2 = data_points[:,4]
+    fan_speed = data_points[:,5]
+    heating = data_points[:,2]
+    cooling = data_points[:,1]
+    std_T = 2
+    thermal_comfort = np.exp(-(indoor_temperature-21)**2/(2*std_T**2))/(std_T*np.sqrt(2*np.pi))/0.199
     # real_energy = [90, 100, 125, 105, 110, 90]
     # our_energy = [70, 79, 100, 85, 89, 60]
-    visualization( indoor_temperature, outdoor_temperature, co2, fan_speed, heating, cooling,thermal_comfort)
+    visualization( indoor_temperature, outdoor_temperature, co2, fan_speed, heating, cooling , thermal_comfort)
 
     # Se a temperatura interior for menor que o heating, vai aquecer 
     # Se a temperatura interior for maior que o cooling vai arrefecer 
