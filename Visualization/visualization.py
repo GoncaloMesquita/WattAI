@@ -114,7 +114,7 @@ def visualization(indoor_temperature, outdoor_temperature, co2, fan_speed, heati
 
     count1 = 0
     next_state = 0
-    timer2 = 19
+    timer2 = 19*3
 
     while True:
         # make timer for while loop
